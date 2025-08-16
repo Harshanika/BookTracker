@@ -1,0 +1,29 @@
+# .gitignore
+
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Dependency directories
+jspm_packages/
+
+# Build output
+dist/
+build/
+out/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Environment variables
+.env
+
+# Docker
+*.local
+
+# OS files
+.DS_Store
+Thumbs.db

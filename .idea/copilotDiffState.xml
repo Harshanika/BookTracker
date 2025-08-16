@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/backend/src/books/books.controller.ts">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/backend/src/books/books.controller.ts" />
+              <option name="originalContent" value="import { Controller,Get } from '@nestjs/common';&#10;&#10;@Controller('books')&#10;export class BooksController {&#10;    &#10;}&#10;" />
+              <option name="updatedContent" value="import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';&#10;import { BooksService } from './books.service';&#10;&#10;@Controller('books')&#10;export class BooksController {&#10;  constructor(private readonly booksService: BooksService) {}&#10;&#10;  @Get()&#10;  findAll() {&#10;    return this.booksService.findAll();&#10;  }&#10;&#10;  @Get(':id')&#10;  findOne(@Param('id') id: string) {&#10;    return this.booksService.findOne(Number(id));&#10;  }&#10;&#10;  @Post()&#10;  create(@Body() body: { title: string; author: string }) {&#10;    return this.booksService.create(body);&#10;  }&#10;&#10;  @Put(':id')&#10;  update(@Param('id') id: string, @Body() body: { title?: string; author?: string }) {&#10;    return this.booksService.update(Number(id), body);&#10;  }&#10;&#10;  @Delete(':id')&#10;  remove(@Param('id') id: string) {&#10;    return this.booksService.remove(Number(id));&#10;  }&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
