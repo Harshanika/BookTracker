@@ -4,9 +4,9 @@ services:
     container_name: booktracker_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: booktracker
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
@@ -21,9 +21,9 @@ services:
     env_file:
         - ./backend/.env
     environment:
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: booktracker
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
     depends_on:
         - db
     ports:
