@@ -16,12 +16,18 @@ export class BooksController {
   }
 
   @Post()
-  create(@Body() body: { title: string; author: string }) {
+  create(@Body() body: { title: string; author: string, genre: string, status: 'available' | 'borrowed' }) {
+    if (!body.title || !body.author || !body.genre || !body.status) {
+        throw new Error('Missing required fields: title, author, genre, status');
+    }
     return this.booksService.create(body);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: { title?: string; author?: string }) {
+  update(@Param('id') id: string, @Body() body: { title?: string; author?: string, genre?: string, status?: 'available' | 'borrowed' }) {
+    if (!body.title && !body.author && !body.genre && !body.status) {
+        throw new Error('At least one field must be provided for update');
+    }
     return this.booksService.update(Number(id), body);
   }
 
