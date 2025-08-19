@@ -20,8 +20,8 @@ export class Book {
     @Column({ default: 'available' })
     status!: 'available' | 'borrowed';
 
-    // @ManyToOne(() => User, user => user.id)
-    // owner!: User;
+    @ManyToOne(() => User, user => user.id)
+    owner!: User;
 
     @OneToMany(() => LendingRecord, (record) => record.book)
     lendingRecords!: LendingRecord[];

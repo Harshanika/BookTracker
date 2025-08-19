@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany} from 'typeorm';
+import { Book } from "../books/book.entity";
 
 @Entity()
 export class User {
@@ -16,4 +17,8 @@ export class User {
 
     @CreateDateColumn()
     createdAt!: Date;
+
+    @OneToMany(() => Book, (book) => book.owner)
+    books!: Book[];   // 👈 All books owned by this user
+
 }

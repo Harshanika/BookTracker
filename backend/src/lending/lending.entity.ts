@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { Book } from '../books/book.entity';
+import { User } from "../users/user.entity";
 
 @Entity()
 export class LendingRecord {
@@ -9,8 +10,11 @@ export class LendingRecord {
     @ManyToOne(() => Book, (book) => book.lendingRecords)
     book!: Book;
 
-    @Column()
-    borrowerName!: string;
+    @ManyToOne(() => User, { nullable: true })
+    borrower?: User;   // if borrower is a registered user
+
+    @Column({ nullable: true })
+    borrowerName?: string;  // if borrower is not registered
 
     @Column()
     lendDate!: Date;
@@ -20,4 +24,5 @@ export class LendingRecord {
 
     @Column({ nullable: true })
     actualReturnDate?: Date;
+
 }
