@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { BooksService } from './books.service';
+import { CreateBookDto } from "./create-book.dto";
 
 @Controller('books')
 export class BooksController {
@@ -16,7 +17,7 @@ export class BooksController {
   }
 
   @Post()
-  create(@Body() body: { title: string; author: string, genre: string, status: 'available' | 'borrowed' }) {
+  create(@Body() body: CreateBookDto) {
     if (!body.title || !body.author || !body.genre || !body.status) {
         throw new Error('Missing required fields: title, author, genre, status');
     }
