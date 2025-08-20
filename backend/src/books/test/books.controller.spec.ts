@@ -11,6 +11,7 @@ describe('BooksController', () => {
   beforeEach(async () => {
     booksService = {
       findAll: jest.fn(),
+      findAllPaginated: jest.fn().mockReturnValue([[], 0]), // <-- Fix here
       findOne: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -30,13 +31,18 @@ describe('BooksController', () => {
   });
 
   describe('findAll', () => {
-    it('should return all books', async () => {
-      const result = [
-        { id: 1, title: 'Book', author: 'Author', genre: 'Fiction', status: 'available' },
-      ];
-      booksService.findAll!.mockReturnValue(result);
-      expect(controller.findAll()).toBe(result);
-    });
+      it('should return all books', async () => {
+          const result = [
+              { id: 1, title: 'Book', author: 'Author', genre: 'Fiction', status: 'available' },
+          ];
+          booksService.findAllPaginated!.mockReturnValue([result, result.length]);
+          expect(await controller.findAll()).toEqual({
+              data: result,
+              total: result.length,
+              page: 1,
+              limit: 10,
+          });
+      });
   });
 
   describe('findOne', () => {

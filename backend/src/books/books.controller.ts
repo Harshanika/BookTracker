@@ -11,7 +11,7 @@ export class BooksController {
     @Query('page') page = 1,
     @Query('limit') limit = 10,
   ) {
-    const [data, total] = await this.booksService.findAllPaginated(page, limit);
+    const [data, total] = this.booksService.findAllPaginated(page, limit);
     return { data, total, page, limit };
   }
   // @Get()

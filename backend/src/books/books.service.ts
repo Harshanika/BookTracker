@@ -192,10 +192,10 @@ export class BooksService {
     return true;
   }
 
-  findAllPaginated(page: number = 1, limit: number = 10): [Book[], number] {
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    const data = this.books.slice(start, end);
-    return [data, this.books.length];
-  }
+    findAllPaginated(page: number = 1, limit: number = 10): [Book[], number] {
+        const start = (page - 1) * limit;
+        const end = start + limit;
+        const data = this.books.slice(start, end);
+        return [data, this.books.length];
+    }
 }
