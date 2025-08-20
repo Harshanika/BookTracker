@@ -87,6 +87,8 @@ Follow these steps in order:
 8. **Stop the stack**
    - docker compose down
 
+## Database Design
+For details about the database structure and rationale, see [docs/db-design.md](docs/db-design.md).
 
 📡 API Routing via Nginx
 /api → Proxies to backend:4000
