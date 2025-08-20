@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './create-book.dto';
 
@@ -7,9 +7,17 @@ export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
   @Get()
-  findAll() {
-    return this.booksService.findAll();
+  async findAll(
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+  ) {
+    const [data, total] = await this.booksService.findAllPaginated(page, limit);
+    return { data, total, page, limit };
   }
+  // @Get()
+  // findAll() {
+  //   return this.booksService.findAll();
+  // }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

@@ -191,4 +191,11 @@ export class BooksService {
     this.books.splice(index, 1);
     return true;
   }
+
+  findAllPaginated(page: number = 1, limit: number = 10): [Book[], number] {
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const data = this.books.slice(start, end);
+    return [data, this.books.length];
+  }
 }
