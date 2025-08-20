@@ -1,6 +1,6 @@
 export class CreateBookDto {
-    title!: string;
-    author!: string;
-    genre!: string;
-    status!: 'available' | 'borrowed';
+  title!: string;
+  author!: string;
+  genre!: string;
+  status!: 'available' | 'borrowed';
 }

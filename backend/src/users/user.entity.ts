@@ -1,24 +1,23 @@
-import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany} from 'typeorm';
-import { Book } from "../books/book.entity";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
+import { Book } from '../books/book.entity';
 
 @Entity()
 export class User {
-    @PrimaryGeneratedColumn()
-    id!: number;
+  @PrimaryGeneratedColumn()
+  id!: number;
 
-    @Column()
-    name!: string;
+  @Column()
+  name!: string;
 
-    @Column({ unique: true })
-    email!: string;
+  @Column({ unique: true })
+  email!: string;
 
-    @Column()
-    passwordHash!: string;
+  @Column()
+  passwordHash!: string;
 
-    @CreateDateColumn()
-    createdAt!: Date;
+  @CreateDateColumn()
+  createdAt!: Date;
 
-    @OneToMany(() => Book, (book) => book.owner)
-    books!: Book[];   // 👈 All books owned by this user
-
+  @OneToMany(() => Book, (book) => book.owner)
+  books!: Book[]; // 👈 All books owned by this user
 }

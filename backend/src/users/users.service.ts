@@ -3,9 +3,9 @@ import { User } from './user.entity';
 
 @Injectable()
 export class UsersService {
-    private users: User[] = [];
+  private users: User[] = [];
 
-    findOne(id: number): User | undefined {
-        return this.users.find(u => u.id === id);
-    }
+  findOne(id: number): User | undefined {
+    return this.users.find((u) => u.id === id);
+  }
 }
