@@ -2,6 +2,12 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'ty
 import { User } from '../users/user.entity';
 import { LendingRecord } from '../lending/lending.entity';
 
+/**
+ * Represents a book in the library.
+ * @property title - Title of the book.
+ * @property author - Author of the book.
+ * @property status - Availability (AVAILABLE, BORROWED).
+ */
 @Entity()
 export class Book {
   @PrimaryGeneratedColumn()
