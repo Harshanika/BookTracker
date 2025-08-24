@@ -1,29 +1,34 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './create-book.dto';
+import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Controller('books')
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
+  @UseGuards(AuthGuard)
   @Get()
   async findAll(
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
+      @Query('page') page = 1,
+      @Query('limit') limit = 10,
   ) {
-    const [data, total] = this.booksService.findAllPaginated(page, limit);
-    return { data, total, page, limit };
+      const [data, total] = await this.booksService.findAllPaginated(page, limit);
+      return { data, total, page, limit };
   }
   // @Get()
   // findAll() {
   //   return this.booksService.findAll();
   // }
 
+  @UseGuards(AuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.booksService.findOne(Number(id));
   }
 
+
+  @UseGuards(AuthGuard)
   @Post()
   create(@Body() body: CreateBookDto) {
     if (!body.title || !body.author || !body.genre || !body.status) {
@@ -32,6 +37,7 @@ export class BooksController {
     return this.booksService.create(body);
   }
 
+  @UseGuards(AuthGuard)
   @Put(':id')
   update(
     @Param('id') id: string,
@@ -44,6 +50,7 @@ export class BooksController {
     return this.booksService.update(Number(id), body);
   }
 
+  @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.booksService.remove(Number(id));

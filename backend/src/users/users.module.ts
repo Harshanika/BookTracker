@@ -4,9 +4,10 @@ import { UsersController } from './users.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LendingRecord } from '../lending/lending.entity';
 import { Book } from '../books/book.entity';
+import { User } from './user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([LendingRecord, Book])],
+  imports: [TypeOrmModule.forFeature([User, LendingRecord, Book])],
   providers: [UsersService],
   controllers: [UsersController],
   exports: [UsersService], // so Auth can use it
