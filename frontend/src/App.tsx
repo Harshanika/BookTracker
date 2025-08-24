@@ -1,3 +1,7 @@
-export default function App() {
-    return <h1>Frontend is running!</h1>;
+import AppRoutes from "./routes";
+
+function App() {
+    return <AppRoutes />;
 }
+
+export default App;
