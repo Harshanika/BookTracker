@@ -1,10 +1,13 @@
 import React from "react";
 
-export default function AuthLayout({ title, children }: { title: string; children: React.ReactNode }) {
+interface AuthLayoutProps {
+    children: React.ReactNode;
+}
+
+export default function AuthLayout({ children }: AuthLayoutProps) {
     return (
-        <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
-            <div className="card shadow-lg p-4" style={{ width: "100%", maxWidth: "400px" }}>
-                <h1 className="text-center text-primary mb-4">{title}</h1>
+        <div className="min-h-screen bg-gradient-primary flex items-center justify-center p-4">
+            <div className="w-full max-w-md">
                 {children}
             </div>
         </div>

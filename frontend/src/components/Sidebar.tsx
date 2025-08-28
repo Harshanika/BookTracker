@@ -1,24 +1,31 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function Sidebar() {
+    const navigate = useNavigate();
+
+    const menuItems = [
+        { label: "Dashboard", path: "/dashboard", icon: "📊" },
+        { label: "Add Book", path: "/add-book", icon: "📚" },
+        { label: "Lend Book", path: "/lend-book", icon: "🤝" },
+        { label: "Lending History", path: "/lent-book-history", icon: "📋" },
+    ];
+
     return (
-        <div className="bg-white shadow-sm p-3 h-100" style={{ minWidth: 220 }}>
-            <h5 className="mb-4 text-primary">Library Menu</h5>
-            <ul className="nav flex-column">
-                <li className="nav-item mb-2">
-                    <Link className="nav-link" to="/add-book">Add Book</Link>
-                </li>
-                <li className="nav-item mb-2">
-                    <Link className="nav-link" to="/lend-book">Lend A Book</Link>
-                </li>
-                <li className="nav-item mb-2">
-                    <Link className="nav-link" to="/lent-book-history">Lent Book History</Link>
-                </li>
-                <li className="nav-item mb-2">
-                    <Link className="nav-link" to="/return-book">Return A Book</Link>
-                </li>
-            </ul>
+        <div className="w-64 bg-white rounded-xl shadow-soft p-6">
+            <h3 className="heading-4 mb-6 text-gray-900">Navigation</h3>
+            <nav className="space-y-2">
+                {menuItems.map((item) => (
+                    <button
+                        key={item.path}
+                        onClick={() => navigate(item.path)}
+                        className="w-full text-left p-3 rounded-lg hover:bg-secondary-50 hover:text-primary-600 transition-all duration-200 flex items-center space-x-3"
+                    >
+                        <span className="text-lg">{item.icon}</span>
+                        <span className="text-body font-medium">{item.label}</span>
+                    </button>
+                ))}
+            </nav>
         </div>
     );
 }

@@ -6,11 +6,14 @@ import ProtectedRoute from "./features/auth/ProtectedRoute";
 import AddBook from "./features/books/AddBookForm";
 import LendBook from "./features/books/LendBookForm";
 import LendHistory from "./features/books/LentBooks";
+import LandingPage from "features/landing/LandingPage";
+import MainLayout from "components/MainLayout";
 
 export default function AppRoutes() {
     return (
         <BrowserRouter>
             <Routes>
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
@@ -18,7 +21,9 @@ export default function AppRoutes() {
                     path="/dashboard"
                     element={
                         <ProtectedRoute>
-                            <Dashboard />
+                             <MainLayout>
+                                <Dashboard />
+                             </MainLayout>
                         </ProtectedRoute>
                     }
                 />
@@ -26,7 +31,9 @@ export default function AppRoutes() {
                     path="/add-book"
                     element={
                         <ProtectedRoute>
-                            <AddBook />
+                            <MainLayout>
+                                <AddBook />
+                            </MainLayout>
                         </ProtectedRoute>
                     }
                 />
@@ -35,7 +42,9 @@ export default function AppRoutes() {
                     path="/lend-book"
                     element={
                         <ProtectedRoute>
-                            <LendBook />
+                            <MainLayout>
+                                <LendBook />
+                            </MainLayout>
                         </ProtectedRoute>
                     }
                 />
@@ -43,7 +52,9 @@ export default function AppRoutes() {
                     path="/lent-book-history"
                     element={
                         <ProtectedRoute>
-                            <LendHistory />
+                            <MainLayout>
+                                <LendHistory />
+                            </MainLayout>
                         </ProtectedRoute>
                     }
                 />
