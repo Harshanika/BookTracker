@@ -17,7 +17,7 @@ export const bookService = {
     // },
 
     addBook: async (book: any): Promise<any> => {
-        return await apiRequest(``, "POST", book);
+        return await apiRequest(`api/book/add`, "POST", book);
     },
 
     // updateBook: async (id: string, book: any): Promise<any> => {

@@ -1,5 +1,5 @@
-// src/components/Header.tsx
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
     username: string;
@@ -8,44 +8,25 @@ interface HeaderProps {
 
 export default function Header({ username, onLogout }: HeaderProps) {
     return (
-        <header
-            style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "1rem",
-                backgroundColor: "#f8f9fa",
-                borderBottom: "1px solid #dee2e6",
-                marginBottom: "1rem",
-            }}
-        >
-            <h1 style={{ margin: 0, color: "#007bff", fontSize: "1.5rem" }}>
-                📚 Library Dashboard
-            </h1>
-            <div>
-                <span
-                    style={{
-                        marginRight: "1rem",
-                        fontWeight: "bold",
-                        color: "#343a40",
-                    }}
-                >
-                    Hello, {username}
-                </span>
-                <button
-                    style={{
-                        padding: "0.5rem 1rem",
-                        fontSize: "0.875rem",
-                        color: "#fff",
-                        backgroundColor: "#dc3545",
-                        border: "none",
-                        borderRadius: "0.25rem",
-                        cursor: "pointer",
-                    }}
-                    onClick={onLogout}
-                >
-                    Logout
-                </button>
+        <header className="bg-white shadow-soft border-b border-secondary-200">
+            <div className="container">
+                <div className="flex justify-between items-center py-4">
+                    <div className="flex items-center">
+                        <div className="text-2xl mr-3">📚</div>
+                        <h1 className="heading-4 text-gradient">SimpleLibrary</h1>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                        <span className="text-body text-gray-700">
+                            Welcome, <span className="font-semibold text-primary-600">{username}</span>
+                        </span>
+                        <button
+                            onClick={onLogout}
+                            className="btn-outline"
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </div>
             </div>
         </header>
     );

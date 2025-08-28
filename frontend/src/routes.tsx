@@ -11,6 +11,7 @@ import BorrowedBooks from "./pages/BorrowedBooks";
 import OverdueBooks from "./pages/OverdueBooks";
 import LandingPage from "./features/landing/LandingPage";
 import MainLayout from "./components/MainLayout";
+import ErrorBoundary from "components/ErrorBoundry";
 
 export default function AppRoutes() {
     return (
@@ -26,7 +27,9 @@ export default function AppRoutes() {
                     element={
                         <ProtectedRoute>
                             <MainLayout>
-                                <Dashboard />
+                                <ErrorBoundary>
+                                    <Dashboard />
+                                </ErrorBoundary>
                             </MainLayout>
                         </ProtectedRoute>
                     }
@@ -36,7 +39,9 @@ export default function AppRoutes() {
                     element={
                         <ProtectedRoute>
                             <MainLayout>
-                                <AddBook />
+                                <ErrorBoundary>
+                                    <AddBook />
+                                </ErrorBoundary>
                             </MainLayout>
                         </ProtectedRoute>
                     }
@@ -46,7 +51,9 @@ export default function AppRoutes() {
                     element={
                         <ProtectedRoute>
                             <MainLayout>
-                                <LendBook />
+                                <ErrorBoundary>
+                                    <LendBook />
+                                </ErrorBoundary>
                             </MainLayout>
                         </ProtectedRoute>
                     }
@@ -56,7 +63,9 @@ export default function AppRoutes() {
                     element={
                         <ProtectedRoute>
                             <MainLayout>
-                                <LendHistory />
+                                <ErrorBoundary>
+                                    <LendHistory />
+                                </ErrorBoundary>
                             </MainLayout>
                         </ProtectedRoute>
                     }
@@ -66,7 +75,9 @@ export default function AppRoutes() {
                     element={
                         <ProtectedRoute>
                             <MainLayout>
-                                <TotalBooks />
+                                <ErrorBoundary>
+                                    <TotalBooks />
+                                </ErrorBoundary>
                             </MainLayout>
                         </ProtectedRoute>
                     }
@@ -76,7 +87,9 @@ export default function AppRoutes() {
                     element={
                         <ProtectedRoute>
                             <MainLayout>
-                                <BorrowedBooks />
+                                <ErrorBoundary>
+                                    <BorrowedBooks />
+                                </ErrorBoundary>
                             </MainLayout>
                         </ProtectedRoute>
                     }
@@ -86,7 +99,9 @@ export default function AppRoutes() {
                     element={
                         <ProtectedRoute>
                             <MainLayout>
-                                <OverdueBooks />
+                                <ErrorBoundary>
+                                    <OverdueBooks />
+                                </ErrorBoundary>
                             </MainLayout>
                         </ProtectedRoute>
                     }

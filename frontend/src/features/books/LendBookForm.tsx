@@ -54,18 +54,27 @@ export default function LendBook() {
     }
 
     return (
-        <div className="container mt-5">
-            <div className="card shadow p-4">
-                <h2 className="text-center text-primary mb-4">Lend a Book</h2>
+        <div>
+            <h2 className="heading-2 mb-8 text-center text-gradient">
+                🤝 Lend a Book
+            </h2>
+            <div className="card max-w-2xl mx-auto">
+                {error && (
+                    <div className="mb-6 p-4 bg-error-50 border border-error-200 rounded-lg text-error-600">
+                        {error}
+                    </div>
+                )}
+                {success && (
+                    <div className="mb-6 p-4 bg-success-50 border border-success-200 rounded-lg text-success-600">
+                        {success}
+                    </div>
+                )}
 
-                {error && <div className="alert alert-danger">{error}</div>}
-                {success && <div className="alert alert-success">{success}</div>}
-
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label className="form-label">Select Book</label>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label className="text-label block mb-2">Select Book</label>
                         <select
-                            className="form-select"
+                            className="input-field"
                             value={bookId}
                             onChange={(e) => setBookId(e.target.value)}
                             required
@@ -79,39 +88,40 @@ export default function LendBook() {
                         </select>
                     </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Borrower's Name</label>
+                    <div>
+                        <label className="text-label block mb-2">Borrower's Name</label>
                         <input
                             type="text"
-                            className="form-control"
+                            className="input-field"
                             value={borrowerName}
                             onChange={(e) => setBorrowerName(e.target.value)}
+                            placeholder="Enter borrower's name"
                             required
                         />
                     </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Lend Date</label>
+                    <div>
+                        <label className="text-label block mb-2">Lend Date</label>
                         <input
                             type="date"
-                            className="form-control"
+                            className="input-field"
                             value={lendDate}
                             onChange={(e) => setLendDate(e.target.value)}
                             required
                         />
                     </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Expected Return Date (Optional)</label>
+                    <div>
+                        <label className="text-label block mb-2">Expected Return Date (Optional)</label>
                         <input
                             type="date"
-                            className="form-control"
+                            className="input-field"
                             value={returnDate}
                             onChange={(e) => setReturnDate(e.target.value)}
                         />
                     </div>
 
-                    <button type="submit" className="btn btn-primary w-100">
+                    <button type="submit" className="btn-primary w-full">
                         Lend Book
                     </button>
                 </form>
