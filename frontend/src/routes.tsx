@@ -6,8 +6,11 @@ import ProtectedRoute from "./features/auth/ProtectedRoute";
 import AddBook from "./features/books/AddBookForm";
 import LendBook from "./features/books/LendBookForm";
 import LendHistory from "./features/books/LentBooks";
-import LandingPage from "features/landing/LandingPage";
-import MainLayout from "components/MainLayout";
+import TotalBooks from "./pages/TotalBooks";
+import BorrowedBooks from "./pages/BorrowedBooks";
+import OverdueBooks from "./pages/OverdueBooks";
+import LandingPage from "./features/landing/LandingPage";
+import MainLayout from "./components/MainLayout";
 
 export default function AppRoutes() {
     return (
@@ -17,13 +20,14 @@ export default function AppRoutes() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
+                {/* Protected routes with MainLayout */}
                 <Route
                     path="/dashboard"
                     element={
                         <ProtectedRoute>
-                             <MainLayout>
+                            <MainLayout>
                                 <Dashboard />
-                             </MainLayout>
+                            </MainLayout>
                         </ProtectedRoute>
                     }
                 />
@@ -37,7 +41,6 @@ export default function AppRoutes() {
                         </ProtectedRoute>
                     }
                 />
-
                 <Route
                     path="/lend-book"
                     element={
@@ -58,7 +61,36 @@ export default function AppRoutes() {
                         </ProtectedRoute>
                     }
                 />
-
+                <Route
+                    path="/total-books-owned"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <TotalBooks />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/total-books-borrowed"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <BorrowedBooks />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/total-books-overdue"
+                    element={
+                        <ProtectedRoute>
+                            <MainLayout>
+                                <OverdueBooks />
+                            </MainLayout>
+                        </ProtectedRoute>
+                    }
+                />
             </Routes>
         </BrowserRouter>
     );

@@ -35,24 +35,24 @@ export default function Dashboard() {
                                 count={totalBooks}
                                 imageUrl="https://cdn-icons-png.flaticon.com/512/201/201818.png"
                                 bgColor="linear-gradient(135deg, #4facfe, #00f2fe)"
-                                onClick={() => navigate("/owned")}
-                                url="/owned"
+                                onClick={() => navigate("/total-books-owned")}
+                                url="/total-books-owned"
                             />
                             <DashboardCard
                                 title="Borrowed Books"
                                 count={borrowedBooks}
                                 imageUrl="https://cdn-icons-png.flaticon.com/512/1828/1828419.png"
                                 bgColor="linear-gradient(135deg, #43e97b, #38f9d7)"
-                                onClick={() => navigate("/borrowed")}
-                                url="/borrowed"
+                                onClick={() => navigate("/total-books-borrowed")}
+                                url="/total-books-borrowed"
                             />
                             <DashboardCard
                                 title="Overdue Books"
                                 count={overdueBooks}
                                 imageUrl="https://cdn-icons-png/flaticon.com/512/2910/2910768.png"
                                 bgColor="linear-gradient(135deg, #ff758c, #ff7eb3)"
-                                onClick={() => navigate("/overdue")}
-                                url="/overdue"
+                                onClick={() => navigate("/total-books-overdue")}
+                                url="/total-books-overdue"
                             />
                         </div>
                     </div>
