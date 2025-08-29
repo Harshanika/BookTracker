@@ -37,12 +37,12 @@ export default function Login() {
             // Step 1: Login to get token
             const loginResult = await dispatch(loginUser({ email, password })).unwrap();
             
-            if (loginResult.token) {
-                // Step 2: Fetch complete user profile with the token
-                await dispatch(fetchUserProfile()).unwrap();
+            // if (loginResult.token) {
+            //     // Step 2: Fetch complete user profile with the token
+            //     await dispatch(fetchUserProfile()).unwrap();
                 
-                // Navigation will happen automatically via useEffect
-            }
+            //     // Navigation will happen automatically via useEffect
+            // }
         } catch (error) {
             // Error is already handled by the Redux slice
             console.error('Login failed:', error);

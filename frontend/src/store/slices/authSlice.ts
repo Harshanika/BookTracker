@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiRequest } from '../../services/api';
+import { setSecureToken, getSecureToken } from '../../services/api';
 
 interface User {
   id: number;
@@ -34,8 +35,8 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  token: localStorage.getItem('access_token'),
+  isAuthenticated: !!localStorage.getItem('access_token'),
   loading: false,
   error: null,
 };
@@ -43,7 +44,7 @@ const initialState: AuthState = {
 // ✅ Complete registration flow: register → login → fetch profile
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
-  async (credentials: { fullname: string; email: string; password: string }) => {
+  async (credentials: { fullname: string; email: string; password: string }, { rejectWithValue }) => {
     try {
       // ✅ Step 1: Register user
       const registerResponse = await apiRequest('/auth/register', {
@@ -65,9 +66,10 @@ export const registerUser = createAsyncThunk(
 
         console.log('✅ Auto-login successful:', loginResponse);
 
+        // ✅ Use 'access_token' to match backend response
         if (loginResponse.message === 'Login success' && loginResponse.access_token) {
-          // ✅ Store token
-          localStorage.setItem('token', loginResponse.access_token);
+          // ✅ Store token securely using the correct name
+          setSecureToken(loginResponse.access_token);
           
           // ✅ Step 3: Fetch user profile
           const profileResponse = await apiRequest('/auth/me');
@@ -75,7 +77,7 @@ export const registerUser = createAsyncThunk(
           console.log('✅ Profile fetched:', profileResponse);
 
           return {
-            token: loginResponse.access_token,
+            token: loginResponse.access_token, // ✅ This matches backend 'access_token'
             user: {
               id: profileResponse.user?.sub || profileResponse.user?.id || 0,
               email: profileResponse.user?.email || credentials.email,
@@ -90,7 +92,7 @@ export const registerUser = createAsyncThunk(
       }
     } catch (error: any) {
       console.error('❌ Registration flow error:', error);
-      throw new Error(error.message || 'Registration failed');
+      return rejectWithValue(error.message || 'Registration failed');
     }
   }
 );
@@ -98,38 +100,52 @@ export const registerUser = createAsyncThunk(
 // ✅ Regular login flow
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
-  async (credentials: { email: string; password: string }) => {
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
+      console.log('🔐 Attempting login with:', credentials.email);
+      
       const response = await apiRequest('/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
 
-      console.log('✅ Login successful:', response);
+      console.log('✅ Login response:', response);
 
       if (response.message === 'Login success' && response.access_token) {
-        // ✅ Store token
-        localStorage.setItem('token', response.access_token);
+        console.log('🔑 Token received:', response.access_token.substring(0, 20) + '...');
         
-        // ✅ Fetch user profile
+        // ✅ Store token securely
+        setSecureToken(response.access_token);
+        
+        // ✅ Verify token is stored
+        const storedToken = getSecureToken();
+        console.log('💾 Token stored successfully:', !!storedToken);
+        
+        // ✅ Fetch user profile with detailed logging
+        console.log('👤 Attempting to fetch user profile...');
         const profileResponse = await apiRequest('/auth/me');
         
-        console.log('✅ Profile fetched:', profileResponse);
+        console.log('✅ Profile response:', profileResponse);
 
-        return {
-          token: response.access_token,
-          user: {
-            id: profileResponse.user?.sub || profileResponse.user?.id || 0,
-            email: profileResponse.user?.email || credentials.email,
-            fullname: profileResponse.user?.fullname || credentials.email,
-          }
-        };
+        if (profileResponse && profileResponse.user) {
+          return {
+            // token: response.access_token,
+            user: {
+              id: profileResponse.user.sub || profileResponse.user.id || 0,
+              email: profileResponse.user.email,
+              fullname: profileResponse.user.fullname,
+            }
+          };
+        } else {
+          console.error('❌ Profile response missing user data:', profileResponse);
+          throw new Error('User profile data is incomplete');
+        }
       } else {
         throw new Error(response.message || 'Login failed');
       }
     } catch (error: any) {
       console.error('❌ Login error:', error);
-      throw new Error(error.message || 'Login failed');
+      return rejectWithValue(error.message || 'Login failed');
     }
   }
 );
@@ -137,9 +153,20 @@ export const loginUser = createAsyncThunk(
 // ✅ Fetch user profile
 export const fetchUserProfile = createAsyncThunk(
   'auth/fetchUserProfile',
-  async () => {
+  async (_, { rejectWithValue }) => {
     try {
+      console.log('👤 Fetching user profile...');
+      
+      // ✅ Check if we have a token
+      const token = getSecureToken();
+      console.log('🔑 Current token:', token ? token.substring(0, 20) + '...' : 'No token');
+      
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+      
       const response = await apiRequest('/auth/me');
+      console.log('✅ Profile API response:', response);
       
       if (response && response.user) {
         return {
@@ -148,11 +175,12 @@ export const fetchUserProfile = createAsyncThunk(
           fullname: response.user.fullname,
         };
       } else {
-        throw new Error('Failed to fetch user profile');
+        console.error('❌ Invalid profile response structure:', response);
+        throw new Error('Invalid user profile data structure');
       }
     } catch (error: any) {
       console.error('❌ Fetch profile error:', error);
-      throw new Error(error.message || 'Failed to fetch user profile');
+      return rejectWithValue(error.message || 'Failed to fetch user profile');
     }
   }
 );
@@ -212,7 +240,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.token = action.payload.token;
+        // state.token = action.payload.token;
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
