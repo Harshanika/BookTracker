@@ -1,12 +1,30 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../store/hooks";
+import { logoutUser } from "../store/slices/authSlice";
 
 interface HeaderProps {
     username: string;
-    onLogout: () => void;
 }
 
-export default function Header({ username, onLogout }: HeaderProps) {
+export default function Header({ username }: HeaderProps) {
+    const navigate = useNavigate();
+    const dispatch = useAppDispatch();
+
+    // ✅ Handle logout directly in Header with Redux
+    const handleLogout = async () => {
+        try {
+            await dispatch(logoutUser()).unwrap();
+            // ✅ Redux will clear the state automatically
+            // ✅ Navigate to login page
+            navigate("/login");
+        } catch (error) {
+            console.error("Logout failed:", error);
+            // ✅ Fallback: manually redirect if Redux fails
+            navigate("/login");
+        }
+    };
+
     return (
         <header className="bg-white shadow-soft border-b border-secondary-200">
             <div className="container">
@@ -20,7 +38,7 @@ export default function Header({ username, onLogout }: HeaderProps) {
                             Welcome, <span className="font-semibold text-primary-600">{username}</span>
                         </span>
                         <button
-                            onClick={onLogout}
+                            onClick={handleLogout}
                             className="btn-outline"
                         >
                             Logout
