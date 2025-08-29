@@ -39,7 +39,7 @@ export default function Login() {
             
             if (loginResult.token) {
                 // Step 2: Fetch complete user profile with the token
-                // await dispatch(fetchUserProfile()).unwrap();
+                await dispatch(fetchUserProfile()).unwrap();
                 
                 // Navigation will happen automatically via useEffect
             }
