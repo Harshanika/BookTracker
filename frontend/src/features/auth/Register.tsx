@@ -54,6 +54,10 @@ export default function Register() {
             setEmail("");
             setPassword("");
             setConfirmPassword("");
+
+            // ✅ User is now authenticated, navigate to dashboard
+            navigate('/dashboard');
+            
         } catch (error) {
             // Error is handled by Redux state
             console.error("Registration failed:", error);

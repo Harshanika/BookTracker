@@ -19,12 +19,9 @@ interface LoginResponse {
 
 interface RegisterResponse {
   message: string;
-  access_token: string;
-  user: {
-    sub: number;
-    email: string;
-    fullname: string;
-  };
+  fullname: string;
+  email: string;
+  password: string;
 }
 
 interface AuthState {
@@ -43,80 +40,124 @@ const initialState: AuthState = {
   error: null,
 };
 
-// ✅ Fixed login thunk to work with your apiRequest function
-export const loginUser = createAsyncThunk(
-  'auth/loginUser',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+// ✅ Complete registration flow: register → login → fetch profile
+export const registerUser = createAsyncThunk(
+  'auth/registerUser',
+  async (credentials: { fullname: string; email: string; password: string }) => {
     try {
-      // ✅ Your apiRequest returns the parsed data directly
-      const data: LoginResponse = await apiRequest('/auth/login', {
+      // ✅ Step 1: Register user
+      const registerResponse = await apiRequest('/auth/register', {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
-      
-      console.log('✅ Login successful:', data);
-      
-      // ✅ Store access_token in localStorage
-      localStorage.setItem('token', data.access_token);
-      
-      // ✅ Return the token (we'll fetch complete user profile with auth/me)
-      return { token: data.access_token };
+
+      console.log('✅ Registration successful:', registerResponse);
+
+      if (registerResponse.message === 'User registered') {
+        // ✅ Step 2: Auto-login after successful registration
+        const loginResponse = await apiRequest('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password
+          }),
+        });
+
+        console.log('✅ Auto-login successful:', loginResponse);
+
+        if (loginResponse.message === 'Login success' && loginResponse.access_token) {
+          // ✅ Store token
+          localStorage.setItem('token', loginResponse.access_token);
+          
+          // ✅ Step 3: Fetch user profile
+          const profileResponse = await apiRequest('/auth/me');
+          
+          console.log('✅ Profile fetched:', profileResponse);
+
+          return {
+            token: loginResponse.access_token,
+            user: {
+              id: profileResponse.user?.sub || profileResponse.user?.id || 0,
+              email: profileResponse.user?.email || credentials.email,
+              fullname: profileResponse.user?.fullname || credentials.fullname,
+            }
+          };
+        } else {
+          throw new Error('Auto-login failed after registration');
+        }
+      } else {
+        throw new Error(registerResponse.message || 'Registration failed');
+      }
     } catch (error: any) {
-      console.error('❌ Login failed:', error);
-      return rejectWithValue(error.message || 'Login failed');
+      console.error('❌ Registration flow error:', error);
+      throw new Error(error.message || 'Registration failed');
     }
   }
 );
 
-// ✅ Fixed register thunk
-export const registerUser = createAsyncThunk(
-  'auth/registerUser',
-  async (userData: { fullname: string; email: string; password: string }, { rejectWithValue }) => {
+// ✅ Regular login flow
+export const loginUser = createAsyncThunk(
+  'auth/loginUser',
+  async (credentials: { email: string; password: string }) => {
     try {
-      const data: RegisterResponse = await apiRequest('/auth/register', {
+      const response = await apiRequest('/auth/login', {
         method: 'POST',
-        body: JSON.stringify(userData),
+        body: JSON.stringify(credentials),
       });
-      
-      console.log('✅ Registration successful:', data);
-      
-      // ✅ Store access_token in localStorage
-      localStorage.setItem('token', data.access_token);
-      
-      return { token: data.access_token };
+
+      console.log('✅ Login successful:', response);
+
+      if (response.message === 'Login success' && response.access_token) {
+        // ✅ Store token
+        localStorage.setItem('token', response.access_token);
+        
+        // ✅ Fetch user profile
+        const profileResponse = await apiRequest('/auth/me');
+        
+        console.log('✅ Profile fetched:', profileResponse);
+
+        return {
+          token: response.access_token,
+          user: {
+            id: profileResponse.user?.sub || profileResponse.user?.id || 0,
+            email: profileResponse.user?.email || credentials.email,
+            fullname: profileResponse.user?.fullname || credentials.email,
+          }
+        };
+      } else {
+        throw new Error(response.message || 'Login failed');
+      }
     } catch (error: any) {
-      console.error('❌ Registration failed:', error);
-      return rejectWithValue(error.message || 'Registration failed');
+      console.error('❌ Login error:', error);
+      throw new Error(error.message || 'Login failed');
     }
   }
 );
 
-// ✅ Fixed fetchUserProfile to work with your apiRequest function
+// ✅ Fetch user profile
 export const fetchUserProfile = createAsyncThunk(
   'auth/fetchUserProfile',
-  async (_, { rejectWithValue }) => {
+  async () => {
     try {
-      // ✅ Your apiRequest returns the parsed data directly
-      const userData = await apiRequest('/auth/me', {
-        method: 'GET',
-      });
+      const response = await apiRequest('/auth/me');
       
-      console.log('✅ User profile fetched:', userData);
-      
-      // ✅ Transform backend user data to match our interface
-      return {
-        id: userData.sub || userData.id,
-        email: userData.email,
-        fullname: userData.fullname
-      };
+      if (response && response.user) {
+        return {
+          id: response.user.sub || response.user.id,
+          email: response.user.email,
+          fullname: response.user.fullname,
+        };
+      } else {
+        throw new Error('Failed to fetch user profile');
+      }
     } catch (error: any) {
-      console.error('❌ Failed to fetch user profile:', error);
-      return rejectWithValue(error.message || 'Failed to fetch user profile');
+      console.error('❌ Fetch profile error:', error);
+      throw new Error(error.message || 'Failed to fetch user profile');
     }
   }
 );
 
-// ✅ Logout thunk
+// ✅ Logout user
 export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async () => {
@@ -132,30 +173,39 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    clearAuth: (state) => {
+      state.user = null;
+      state.token = null;
+      state.isAuthenticated = false;
+      localStorage.removeItem('token');
+    },
     setToken: (state, action: PayloadAction<string>) => {
       state.token = action.payload;
       state.isAuthenticated = true;
+      localStorage.setItem('token', action.payload);
     },
   },
   extraReducers: (builder) => {
     builder
-      // Register cases
+      // ✅ Register user cases (now includes complete flow)
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
+        // ✅ User is now fully authenticated after registration
         state.token = action.payload.token;
+        state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
-        state.isAuthenticated = false;
+        state.error = action.error.message || 'Registration failed';
       })
-      // Login cases
+      
+      // ✅ Login user cases
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -163,15 +213,16 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload.token;
+        state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
-        state.isAuthenticated = false;
+        state.error = action.error.message || 'Login failed';
       })
-      // Fetch user profile cases
+      
+      // ✅ Fetch user profile cases
       .addCase(fetchUserProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -183,18 +234,18 @@ const authSlice = createSlice({
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error.message || 'Failed to fetch user profile';
       })
-      // Logout cases
+      
+      // ✅ Logout user cases
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
-        state.loading = false;
         state.error = null;
       });
   },
 });
 
-export const { clearError, setToken } = authSlice.actions;
+export const { clearError, clearAuth, setToken } = authSlice.actions;
 export default authSlice.reducer;
