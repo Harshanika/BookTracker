@@ -189,7 +189,7 @@ export const fetchUserProfile = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     return null;
   }
 );
@@ -205,12 +205,12 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
     },
     setToken: (state, action: PayloadAction<string>) => {
       state.token = action.payload;
       state.isAuthenticated = true;
-      localStorage.setItem('token', action.payload);
+      localStorage.setItem('access_token', action.payload);
     },
   },
   extraReducers: (builder) => {
