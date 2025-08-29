@@ -1,65 +1,126 @@
-import React, { useState } from "react";
-import { loginUser } from "../../services/auth";
-import type { LoginResponse, User } from "./types";
-import { extractErrorMessage } from "../../utils/errorHandler";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { loginUser, fetchUserProfile, clearError } from "../../store/slices/authSlice";
+import AuthLayout from "../../components/AuthLayout";
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
+    
+    const navigate = useNavigate();
+    const dispatch = useAppDispatch();
+    
+    const { loading, error, isAuthenticated, user } = useAppSelector(state => state.auth);
 
-    async function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        try {
-            const res = await loginUser({email, password}) as LoginResponse;
-            localStorage.setItem("token", res.access_token);
+    // Clear any previous errors when component mounts
+    useEffect(() => {
+        dispatch(clearError());
+    }, [dispatch]);
 
-            window.location.href = "/dashboard";
-        } catch (err: any) {
-            const errorMsg = extractErrorMessage(err);
-            setError(errorMsg);
+    // Handle successful authentication
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            // Navigate to dashboard after successful login
+            navigate("/dashboard");
         }
-    }
+    }, [isAuthenticated, user, navigate]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!email || !password) {
+            return;
+        }
+
+        try {
+            // Step 1: Login to get token
+            const loginResult = await dispatch(loginUser({ email, password })).unwrap();
+            
+            if (loginResult.token) {
+                // Step 2: Fetch complete user profile with the token
+                // await dispatch(fetchUserProfile()).unwrap();
+                
+                // Navigation will happen automatically via useEffect
+            }
+        } catch (error) {
+            // Error is already handled by the Redux slice
+            console.error('Login failed:', error);
+        }
+    };
 
     return (
-        <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
-            <div className="card shadow-lg p-4" style={{ width: "100%", maxWidth: "400px" }}>
-                <h1 className="text-center text-primary mb-4">Login</h1>
-
-                {error && <div className="alert alert-danger text-center">{error}</div>}
-
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label htmlFor="email" className="form-label">Email</label>
-                        <input
-                            id="email"
-                            className="form-control"
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+        <AuthLayout>
+            <div className="card shadow-lg">
+                <div className="card-body p-5">
+                    <div className="text-center mb-4">
+                        <h2 className="heading-2 text-gradient">Welcome Back</h2>
+                        <p className="text-body text-muted">
+                            Sign in to access your library
+                        </p>
                     </div>
 
-                    <div className="mb-3">
-                        <label htmlFor="password" className="form-label">Password</label>
-                        <input
-                            id="password"
-                            className="form-control"
-                            type="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
+                    {/* ✅ Display Redux error state */}
+                    {error && (
+                        <div className="alert alert-danger">
+                            <strong>Login Error:</strong> {error}
+                        </div>
+                    )}
 
-                    <button className="btn btn-primary w-100" type="submit">
-                        Login
-                    </button>
-                </form>
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-3">
+                            <label className="form-label">Email Address</label>
+                            <input
+                                type="email"
+                                className="form-control"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                placeholder="Enter your email"
+                                autoComplete="email"
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="form-label">Password</label>
+                            <input
+                                type="password"
+                                className="form-control"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                placeholder="Enter your password"
+                                autoComplete="current-password"
+                            />
+                        </div>
+
+                        {/* ✅ Use Redux loading state */}
+                        <button 
+                            type="submit" 
+                            className="btn btn-primary w-100"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Signing In...
+                                </>
+                            ) : (
+                                'Sign In'
+                            )}
+                        </button>
+                    </form>
+
+                    <div className="text-center mt-4">
+                        <p className="text-muted">
+                            Don't have an account?{" "}
+                            <a href="/register" className="text-decoration-none">
+                                Create one here
+                            </a>
+                        </p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </AuthLayout>
     );
 }

@@ -44,6 +44,7 @@ export default function LandingPage() {
                         Simple, powerful, and designed for book lovers.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        {/* ✅ Use navigate instead of href */}
                         <button
                             onClick={() => navigate("/register")}
                             className="btn-primary text-lg px-8 py-4"

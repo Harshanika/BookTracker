@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { bookService } from "../../services/bookService";
+// import { bookService } from "../../services/bookService";
 
 export default function AddBook() {
     const navigate = useNavigate();
@@ -14,7 +14,7 @@ export default function AddBook() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         try {
-            await bookService.addBook({ title, author, genre, status });
+            // await bookService.addBook({ title, author, genre, status });
             setSuccess("Book added successfully!");
             setTimeout(() => navigate("/dashboard"), 1500);
         } catch (err: any) {
