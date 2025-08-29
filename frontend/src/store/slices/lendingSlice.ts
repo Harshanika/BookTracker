@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { apiRequest } from '../../services/api';
 
 interface LendingRecord {
   id: string;
@@ -23,21 +24,14 @@ const initialState: LendingState = {
   error: null,
 };
 
-// Async thunks
+// ✅ Use apiRequest instead of manual fetch
 export const fetchLendingHistory = createAsyncThunk(
   'lending/fetchHistory',
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const { auth } = getState() as { auth: { token: string } };
-      const response = await fetch('http://localhost:4000/api/lending/history', {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
-      
-      if (!response.ok) {
-        return rejectWithValue('Failed to fetch lending history');
-      }
-      
-      return await response.json();
+      // ✅ apiRequest automatically includes the token
+      const data = await apiRequest('http://localhost:4000/api/lending/history');
+      return data;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Network error');
     }
@@ -46,47 +40,33 @@ export const fetchLendingHistory = createAsyncThunk(
 
 export const lendBook = createAsyncThunk(
   'lending/lendBook',
-  async (lendingData: { bookId: string; borrowerName: string; expectedReturnDate?: string }, { rejectWithValue, getState }) => {
+  async (lendingData: { bookId: string; borrowerName: string; expectedReturnDate?: string }, { rejectWithValue }) => {
     try {
-      const { auth } = getState() as { auth: { token: string } };
-      const response = await fetch('http://localhost:4000/api/books/lend', {
+      // ✅ apiRequest automatically includes the token
+      const data = await apiRequest('http://localhost:4000/api/books/lend', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}` 
-        },
         body: JSON.stringify(lendingData),
       });
       
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Failed to lend book');
-      }
-      
-      return await response.json();
+      return data;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Network error');
+      return rejectWithValue(error.message || 'Failed to lend book');
     }
   }
 );
 
 export const returnBook = createAsyncThunk(
   'lending/returnBook',
-  async (lendingId: string, { rejectWithValue, getState }) => {
+  async (lendingId: string, { rejectWithValue }) => {
     try {
-      const { auth } = getState() as { auth: { token: string } };
-      const response = await fetch(`http://localhost:4000/api/lending/${lendingId}/return`, {
+      // ✅ apiRequest automatically includes the token
+      await apiRequest(`http://localhost:4000/api/lending/${lendingId}/return`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${auth.token}` },
       });
-      
-      if (!response.ok) {
-        return rejectWithValue('Failed to return book');
-      }
       
       return lendingId;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Network error');
+      return rejectWithValue(error.message || 'Failed to return book');
     }
   }
 );
@@ -101,7 +81,6 @@ const lendingSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch History
       .addCase(fetchLendingHistory.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -115,7 +94,6 @@ const lendingSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Lend Book
       .addCase(lendBook.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -129,7 +107,6 @@ const lendingSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Return Book
       .addCase(returnBook.fulfilled, (state, action) => {
         const record = state.lendingRecords.find(r => r.id === action.payload);
         if (record) {

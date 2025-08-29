@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { apiRequest } from '../../services/api';
 
 interface Book {
   id: string;
@@ -27,96 +28,66 @@ const initialState: BooksState = {
   overdueBooks: 0,
 };
 
-// Async thunks
+// ✅ Use apiRequest instead of manual fetch
 export const fetchBooks = createAsyncThunk(
   'books/fetchBooks',
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const { auth } = getState() as { auth: { token: string } };
-      const response = await fetch('http://localhost:4000/api/books', {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
-      
-      if (!response.ok) {
-        return rejectWithValue('Failed to fetch books');
-      }
-      
-      const data = await response.json();
+      // ✅ apiRequest automatically includes the token
+      const data = await apiRequest('api/books');
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Network error');
+      return rejectWithValue(error.message || 'Failed to fetch books');
     }
   }
 );
 
 export const addBook = createAsyncThunk(
   'books/addBook',
-  async (bookData: Omit<Book, 'id'>, { rejectWithValue, getState }) => {
+  async (bookData: Omit<Book, 'id'>, { rejectWithValue }) => {
     try {
-      const { auth } = getState() as { auth: { token: string } };
-      const response = await fetch('http://localhost:4000/api/books', {
+      // ✅ apiRequest automatically includes the token
+      const data = await apiRequest('api/books', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}` 
-        },
         body: JSON.stringify(bookData),
       });
       
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Failed to add book');
-      }
-      
-      return await response.json();
+      return data;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Network error');
+      return rejectWithValue(error.message || 'Failed to add book');
     }
   }
 );
 
 export const updateBook = createAsyncThunk(
   'books/updateBook',
-  async ({ id, updates }: { id: string; updates: Partial<Book> }, { rejectWithValue, getState }) => {
+  async ({ id, updates }: { id: string; updates: Partial<Book> }, { rejectWithValue }) => {
     try {
-      const { auth } = getState() as { auth: { token: string } };
-      const response = await fetch(`http://localhost:4000/api/books/${id}`, {
+      // ✅ apiRequest automatically includes the token
+      const data = await apiRequest(`api/books/${id}`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth.token}` 
-        },
         body: JSON.stringify(updates),
       });
       
-      if (!response.ok) {
-        return rejectWithValue('Failed to update book');
-      }
-      
-      return await response.json();
+      return data;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Network error');
+      return rejectWithValue(error.message || 'Failed to update book');
     }
   }
 );
 
 export const deleteBook = createAsyncThunk(
   'books/deleteBook',
-  async (id: string, { rejectWithValue, getState }) => {
+  async (id: string, { rejectWithValue }) => {
     try {
-      const { auth } = getState() as { auth: { token: string } };
-      const response = await fetch(`http://localhost:4000/api/books/${id}`, {
+      // ✅ apiRequest automatically includes the token
+      await apiRequest(`api/books/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${auth.token}` },
       });
-      
-      if (!response.ok) {
-        return rejectWithValue('Failed to delete book');
-      }
       
       return id;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Network error');
+      return rejectWithValue(error.message || 'Failed to delete book');
     }
   }
 );
@@ -136,7 +107,6 @@ const booksSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Books
       .addCase(fetchBooks.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -150,7 +120,6 @@ const booksSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Add Book
       .addCase(addBook.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -165,14 +134,12 @@ const booksSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Update Book
       .addCase(updateBook.fulfilled, (state, action) => {
         const index = state.books.findIndex(book => book.id === action.payload.id);
         if (index !== -1) {
           state.books[index] = action.payload;
         }
       })
-      // Delete Book
       .addCase(deleteBook.fulfilled, (state, action) => {
         state.books = state.books.filter(book => book.id !== action.payload);
         state.totalBooks = Math.max(0, state.totalBooks - 1);
