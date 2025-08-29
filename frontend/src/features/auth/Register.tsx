@@ -47,14 +47,15 @@ export default function Register() {
         }
 
         try {
+            // ✅ This now handles: register → login → fetch profile
             await dispatch(registerUser({ fullname: name, email, password })).unwrap();
             
-            // Clear form on success
+            // ✅ Clear form on success
             setName("");
             setEmail("");
             setPassword("");
             setConfirmPassword("");
-
+            
             // ✅ User is now authenticated, navigate to dashboard
             navigate('/dashboard');
             
@@ -63,6 +64,7 @@ export default function Register() {
             console.error("Registration failed:", error);
         }
     };
+
 
     return (
         <AuthLayout>
