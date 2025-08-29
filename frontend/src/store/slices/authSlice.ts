@@ -127,13 +127,13 @@ export const loginUser = createAsyncThunk(
         
         console.log('✅ Profile response:', profileResponse);
 
-        if (profileResponse && profileResponse.user) {
+        if (profileResponse) {
           return {
-            // token: response.access_token,
+            token: response.access_token,
             user: {
-              id: profileResponse.user.sub || profileResponse.user.id || 0,
-              email: profileResponse.user.email,
-              fullname: profileResponse.user.fullname,
+              id: profileResponse.sub || profileResponse.id || 0,
+              email: profileResponse.email,
+              fullname: profileResponse.fullname,
             }
           };
         } else {
