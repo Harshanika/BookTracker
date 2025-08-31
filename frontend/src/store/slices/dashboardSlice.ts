@@ -46,58 +46,9 @@ export const fetchDashboardData = createAsyncThunk(
   'dashboard/fetchData',
   async (_, { rejectWithValue }) => {
     try {
-      // Fetch all dashboard data in parallel
-      const [booksResponse, lendingResponse] = await Promise.all([
-        apiRequest('/books'),
-        apiRequest('/lending/history'),
-      ]);
-
-      // Calculate stats from the responses
-      const totalBooks = booksResponse.data?.length || booksResponse.length || 0;
-      const borrowedBooks = (booksResponse.data || booksResponse).filter(
-        (book: any) => book.status === 'borrowed'
-      ).length;
-      
-      // Calculate overdue books (books borrowed more than 30 days ago)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const overdueBooks = (lendingResponse.data || lendingResponse).filter(
-        (lending: any) => {
-          const lendDate = new Date(lending.lendDate);
-          return lending.status === 'lent' && lendDate < thirtyDaysAgo;
-        }
-      ).length;
-
-      // Get recent books (last 5 added)
-      const recentBooks = (booksResponse.data || booksResponse)
-        .slice(0, 5)
-        .map((book: any) => ({
-          id: book.id,
-          title: book.title,
-          author: book.author,
-          status: book.status,
-          coverUrl: book.coverUrl,
-        }));
-
-      // Get recent lending (last 5)
-      const recentLending = (lendingResponse.data || lendingResponse)
-        .slice(0, 5)
-        .map((lending: any) => ({
-          id: lending.id,
-          bookTitle: lending.bookTitle,
-          borrowerName: lending.borrowerName,
-          lendDate: lending.lendDate,
-          expectedReturnDate: lending.expectedReturnDate,
-        }));
-
-      return {
-        totalBooks,
-        borrowedBooks,
-        overdueBooks,
-        recentBooks,
-        recentLending,
-      };
+      const response = await apiRequest('/api/dashboard/stats');
+      const totalBooks = response.data?.length || response.length || 0;
+      return totalBooks;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch dashboard data');
     }
@@ -194,24 +145,24 @@ const dashboardSlice = createSlice({
       state.stats.totalBooks = Math.max(0, state.stats.totalBooks - 1);
       state.lastUpdated = new Date().toISOString();
     },
-    updateBookStatus: (state, action: PayloadAction<{ bookId: string; newStatus: 'available' | 'borrowed' }>) => {
-      const { bookId, newStatus } = action.payload;
+    // updateBookStatus: (state, action: PayloadAction<{ bookId: string; newStatus: 'available' | 'borrowed' }>) => {
+    //   const { bookId, newStatus } = action.payload;
       
-      // Update book status in recent books
-      const book = state.stats.recentBooks.find(b => b.id === bookId);
-      if (book) {
-        book.status = newStatus;
-      }
+    //   // Update book status in recent books
+    //   const book = state.stats.recentBooks.find(b => b.id === bookId);
+    //   if (book) {
+    //     book.status = newStatus;
+    //   }
       
-      // Update counts
-      if (newStatus === 'borrowed') {
-        state.stats.borrowedBooks += 1;
-      } else {
-        state.stats.borrowedBooks = Math.max(0, state.stats.borrowedBooks - 1);
-      }
+    //   // Update counts
+    //   if (newStatus === 'borrowed') {
+    //     state.stats.borrowedBooks += 1;
+    //   } else {
+    //     state.stats.borrowedBooks = Math.max(0, state.stats.borrowedBooks - 1);
+    //   }
       
-      state.lastUpdated = new Date().toISOString();
-    },
+    //   state.lastUpdated = new Date().toISOString();
+    // },
   },
   extraReducers: (builder) => {
     builder
@@ -267,7 +218,7 @@ export const {
   updateStats,
   incrementTotalBooks,
   decrementTotalBooks,
-  updateBookStatus,
+  // updateBookStatus,
 } = dashboardSlice.actions;
 
 export default dashboardSlice.reducer;

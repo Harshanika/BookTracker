@@ -168,11 +168,11 @@ export const fetchUserProfile = createAsyncThunk(
       const response = await apiRequest('/auth/me');
       console.log('✅ Profile API response:', response);
       
-      if (response && response.user) {
+      if (response) {
         return {
-          id: response.user.sub || response.user.id,
-          email: response.user.email,
-          fullname: response.user.fullname,
+          id: response.sub || response.id,
+          email: response.email,
+          fullname: response.fullname,
         };
       } else {
         console.error('❌ Invalid profile response structure:', response);

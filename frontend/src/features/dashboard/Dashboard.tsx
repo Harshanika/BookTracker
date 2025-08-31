@@ -3,6 +3,7 @@ import DashboardCard from "../../components/DashboardCard";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import { fetchDashboardData } from "../../store/slices/dashboardSlice";
+import { fetchAllBooks, fetchUserBooks } from "store/slices/bookSlice";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -11,20 +12,26 @@ export default function Dashboard() {
     // ✅ Use Redux state instead of useState
     const { stats, loading, error, lastUpdated } = useAppSelector(state => state.dashboard);
     const { user } = useAppSelector(state => state.auth);
+    const { books, userBooks, loading: booksLoading, error: booksError } = useAppSelector(state => state.book);
 
     useEffect(() => {
         // ✅ Dispatch Redux action to fetch dashboard data
         dispatch(fetchDashboardData());
+        // dispatch(fetchUserBooks());
+        // dispatch(fetchAllBooks());
     }, [dispatch]);
+
+    const totalBooks = userBooks.length;
+    const borrowedBooks = userBooks.filter(book => book.status === 'borrowed').length;
+    const availableBooks = userBooks.filter(book => book.status === 'available').length;
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="container mt-4">
                 <div className="text-center">
-                    <div className="spinner-border text-primary" role="status">
+                    <div className="spinner-border" role="status">
                         <span className="visually-hidden">Loading...</span>
                     </div>
-                    <p className="mt-2">Loading your library...</p>
                 </div>
             </div>
         );
