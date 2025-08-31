@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './create-book.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { AuthenticatedRequest } from '../dashboard/interfaces/authenticated.request';
 
 @Controller('books')
 export class BooksController {
@@ -29,12 +30,12 @@ export class BooksController {
 
 
   @UseGuards(AuthGuard)
-  @Post()
-  create(@Body() body: CreateBookDto) {
-    if (!body.title || !body.author || !body.genre || !body.status) {
+  @Post('add')
+  async create(@Body() createBookDto: CreateBookDto, @Req() req: AuthenticatedRequest) {
+    if (!createBookDto.title || !createBookDto.author || !createBookDto.genre || !createBookDto.status) {
       throw new Error('Missing required fields: title, author, genre, status');
     }
-    return this.booksService.create(body);
+    return this.booksService.create(createBookDto, req.user.sub);
   }
 
   @UseGuards(AuthGuard)
@@ -51,8 +52,13 @@ export class BooksController {
   }
 
   @UseGuards(AuthGuard)
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.booksService.remove(Number(id));
+  @Post('my-books')
+  async get(@Body() createBookDto: CreateBookDto, @Req() req: AuthenticatedRequest) {
+    if (!createBookDto.title || !createBookDto.author || !createBookDto.genre || !createBookDto.status) {
+      throw new Error('Missing required fields: title, author, genre, status');
+    }
+    return this.booksService.create(createBookDto, req.user.sub);
   }
+
+  
 }

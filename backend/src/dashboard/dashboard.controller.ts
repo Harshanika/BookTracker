@@ -10,7 +10,7 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService,
               private readonly booksService: BooksService) {}
 
-  @Get()
+  @Get('stats')
   getStats() {
     return this.dashboardService.getStats();
   }

@@ -5,24 +5,28 @@ import { JwtService } from '@nestjs/jwt';
 export class AuthGuard implements CanActivate {
     constructor(private jwtService: JwtService) {}
 
-    canActivate(context: ExecutionContext): boolean {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const authHeader = request.headers['authorization']; // Bearer <token>
-        if (!authHeader) return false;
-        const token = authHeader.split(' ')[1];
-
+        const token = this.extractTokenFromHeader(request);
+        
         if (!token) {
-            throw new UnauthorizedException();
+          throw new UnauthorizedException();
         }
-
+        
         try {
-            const user = this.jwtService.verify(token);
-            request.user = user;
-            return true;
-        } catch (error) {
-            console.error('JWT verification failed:', error);
-            throw new UnauthorizedException();
-            // return false;
+          // ✅ Decode JWT and attach user info to request
+          const payload = await this.jwtService.verifyAsync(token);
+          request.user = payload; // ✅ This gives you req.user.sub (user ID)
+          return true;
+        } catch {
+          throw new UnauthorizedException();
         }
-    }
+      }
+
+      private extractTokenFromHeader(request: any): string | undefined {
+        const authHeader = request.headers?.authorization || request.headers?.Authorization;
+        if (!authHeader || typeof authHeader !== 'string') return undefined;
+        const [type, token] = authHeader.split(' ');
+        return type === 'Bearer' ? token : undefined;
+      }
 }

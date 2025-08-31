@@ -3,4 +3,6 @@ export class CreateBookDto {
   author!: string;
   genre!: string;
   status!: 'available' | 'borrowed';
+  description?: string;
+  coverUrl?: string;
 }
