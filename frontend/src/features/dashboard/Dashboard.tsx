@@ -3,17 +3,17 @@ import DashboardCard from "../../components/DashboardCard";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import { fetchDashboardData } from "../../store/slices/dashboardSlice";
-import { fetchAllBooks, fetchUserBooks } from "store/slices/bookSlice";
+//  import { fetchAllBooks, fetchUserBooks } from "store/slices/bookSlice";
 
 export default function Dashboard() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     
     // ✅ Use Redux state instead of useState
-    const { stats, loading, error, lastUpdated } = useAppSelector(state => state.dashboard);
-    const { user } = useAppSelector(state => state.auth);
-    const { books, userBooks, loading: booksLoading, error: booksError } = useAppSelector(state => state.book);
-
+    // const { stats, loading, error, lastUpdated } = useAppSelector(state => state.dashboard);
+    // const { user } = useAppSelector(state => state.auth);
+    // const { books, userBooks, loading: booksLoading, error: booksError } = useAppSelector(state => state.book);
+    const { stats, loading: dashboardLoading, error: dashboardError } = useAppSelector(state => state.dashboard);
     useEffect(() => {
         // ✅ Dispatch Redux action to fetch dashboard data
         dispatch(fetchDashboardData());
@@ -21,11 +21,11 @@ export default function Dashboard() {
         // dispatch(fetchAllBooks());
     }, [dispatch]);
 
-    const totalBooks = userBooks.length;
-    const borrowedBooks = userBooks.filter(book => book.status === 'borrowed').length;
-    const availableBooks = userBooks.filter(book => book.status === 'available').length;
+    // const totalBooks = userBooks.length ? userBooks.length : 0;
+    // const borrowedBooks = userBooks.filter(book => book.status === 'borrowed').length;
+    // const availableBooks = userBooks.filter(book => book.status === 'available').length ? userBooks.filter(book => book.status === 'available').length : 0;
 
-    if (loading) {
+    if (dashboardLoading) {
         return (
             <div className="container mt-4">
                 <div className="text-center">
@@ -37,13 +37,13 @@ export default function Dashboard() {
         );
     }
 
-    if (error) {
+    if (dashboardError) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
                     <div className="alert alert-danger">
                         <h4>Error Loading Dashboard</h4>
-                        <p>{error}</p>
+                        <p>{dashboardError}</p>
                         <button 
                             className="btn btn-primary"
                             onClick={() => dispatch(fetchDashboardData())}
@@ -66,11 +66,11 @@ export default function Dashboard() {
                         </h2>
                         
                         {/* Last Updated Info */}
-                        {lastUpdated && (
+                        {/* {stats.lastUpdated && (
                             <p className="text-center text-muted mb-4">
-                                Last updated: {new Date(lastUpdated).toLocaleString()}
+                                Last updated: {new Date(stats.lastUpdated).toLocaleString()}
                             </p>
-                        )}
+                        )} */}
                         
                         <div className="grid">
                             <DashboardCard
@@ -105,7 +105,7 @@ export default function Dashboard() {
                             
                             {/* Recent Books */}
                             <div className="row">
-                                <div className="col-md-6">
+                                {/* <div className="col-md-6">
                                     <h4 className="heading-4 mb-3">Recent Books</h4>
                                     <div className="list-group">
                                         {stats.recentBooks.map((book) => (
@@ -120,12 +120,12 @@ export default function Dashboard() {
                                             </div>
                                         ))}
                                     </div>
-                                </div>
+                                </div> */}
                                 
                                 {/* Recent Lending */}
                                 <div className="col-md-6">
                                     <h4 className="heading-4 mb-3">Recent Lending</h4>
-                                    <div className="list-group">
+                                    {/* <div className="list-group">
                                         {stats.recentLending.map((lending) => (
                                             <div key={lending.id} className="list-group-item">
                                                 <h6 className="mb-1">{lending.bookTitle}</h6>
@@ -135,7 +135,7 @@ export default function Dashboard() {
                                                 </small>
                                             </div>
                                         ))}
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </div>

@@ -47,8 +47,9 @@ export const fetchDashboardData = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await apiRequest('/api/dashboard/stats');
+      console.log(response);
       const totalBooks = response.data?.length || response.length || 0;
-      return totalBooks;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch dashboard data');
     }
@@ -60,7 +61,7 @@ export const getUserOwnedBooks = createAsyncThunk(
   'dashboard/getUserOwned',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/books');
+      const response = await apiRequest('/api/books/my-books');
       const totalBooks = response.data?.length || response.length || 0;
       return totalBooks;
     } catch (error: any) {
@@ -74,7 +75,7 @@ export const getBorrowedBooks = createAsyncThunk(
   'dashboard/getBorrowed',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/books');
+      const response = await apiRequest('/api/books/borrowed');
       const borrowedBooks = (response.data || response).filter(
         (book: any) => book.status === 'borrowed'
       ).length;
@@ -90,7 +91,7 @@ export const getOverdueBooks = createAsyncThunk(
   'dashboard/getOverdue',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/lending/history');
+      const response = await apiRequest('/api/lending/history');
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
@@ -173,7 +174,7 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchDashboardData.fulfilled, (state, action) => {
         state.loading = false;
-        state.stats = action.payload;
+        state.stats = action.payload.data || action.payload || {};
         state.lastUpdated = new Date().toISOString();
         state.error = null;
       })
@@ -183,17 +184,17 @@ const dashboardSlice = createSlice({
       })
       // Get User Owned Books
       .addCase(getUserOwnedBooks.fulfilled, (state, action) => {
-        state.stats.totalBooks = action.payload;
+        state.stats.totalBooks = action.payload.data.length || action.payload.length || 0;
         state.lastUpdated = new Date().toISOString();
       })
       // Get Borrowed Books
       .addCase(getBorrowedBooks.fulfilled, (state, action) => {
-        state.stats.borrowedBooks = action.payload;
+        state.stats.borrowedBooks = action.payload.data.length || action.payload.length || 0;
         state.lastUpdated = new Date().toISOString();
       })
       // Get Overdue Books
       .addCase(getOverdueBooks.fulfilled, (state, action) => {
-        state.stats.overdueBooks = action.payload;
+        state.stats.overdueBooks = action.payload.data.length || action.payload.length || 0;
         state.lastUpdated = new Date().toISOString();
       })
       // Refresh Stats
