@@ -20,13 +20,13 @@ export class DashboardService {
       where: { owner: { id: userId } }
     });
 
-    // Get borrowed books (books lent out by user)
-    const borrowedBooks = await this.bookRepository.count({
-      where: { 
-        owner: { id: userId },
-        status: 'borrowed'
-      }
-    });
+    // Get borrowed books (books lent out by user) - count from lending records
+    const borrowedBooks = await this.lendingRepository
+      .createQueryBuilder('lending')
+      .leftJoin('lending.book', 'book')
+      .where('book.owner.id = :userId', { userId })
+      .andWhere('lending.actualReturnDate IS NULL')
+      .getCount();
 
     // Get overdue books (books with expected return date passed and not returned)
     const currentDate = new Date();
@@ -53,7 +53,6 @@ export class DashboardService {
       .leftJoinAndSelect('book.owner', 'owner')
       .leftJoinAndSelect('lending.borrower', 'borrower')
       .where('book.owner.id = :userId', { userId })
-      .andWhere('book.status = :status', { status: 'borrowed' })
       .andWhere('lending.actualReturnDate IS NULL');
 
     // Get total count
@@ -71,7 +70,7 @@ export class DashboardService {
       title: record.book.title,
       author: record.book.author,
       genre: record.book.genre,
-      status: record.book.status,
+      status: 'borrowed', // Always show as borrowed since it's in lending records
       owner: record.book.owner,
       // Borrower information
       borrowerName: record.borrowerName,
