@@ -62,14 +62,18 @@ export const lendBook = createAsyncThunk(
 
 export const returnBook = createAsyncThunk(
   'lending/returnBook',
-  async (lendingId: string, { rejectWithValue }) => {
+  async (params: { lendingId: string; actualReturnDate?: string; returnNote?: string }, { rejectWithValue }) => {
     try {
       // ✅ apiRequest automatically includes the token
-      await apiRequest(`/api/lending/${lendingId}/return`, {
-        method: 'PUT',
+      await apiRequest(`/api/lending/${params.lendingId}/return`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          actualReturnDate: params.actualReturnDate,
+          returnNote: params.returnNote
+        })
       });
       
-      return lendingId;
+      return params.lendingId;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to return book');
     }
