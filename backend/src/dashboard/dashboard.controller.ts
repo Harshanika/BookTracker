@@ -15,11 +15,16 @@ export class DashboardController {
   getStats(@Req() req: AuthenticatedRequest) {
     return this.dashboardService.getStats(req.user.sub);
   }
+  
   @UseGuards(AuthGuard)
   @Get('borrowed')
-  getUserBorrowedBooks(@Req() req: AuthenticatedRequest) {
+  async getUserBorrowedBooks(
+    @Req() req: AuthenticatedRequest, 
+    @Query('page') page = '1',
+    @Query('limit') limit = '10'
+  ) {
     const userId = req.user.sub;
-    return this.dashboardService.getBorrowedBooksByUser(userId);
+    return this.dashboardService.getBorrowedBooksByUser(userId, +page, +limit);
   }
   @UseGuards(AuthGuard)
   @Get('owned')
@@ -31,9 +36,12 @@ export class DashboardController {
 
   @UseGuards(AuthGuard)
   @Get('overdue')
-  getOverdue(@Req() req: AuthenticatedRequest) {
-    // Implement logic in the service as needed
-    return this.dashboardService.getOverdueBooksByUser(req.user.sub);
+  async getOverdue(
+    @Req() req: AuthenticatedRequest,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10'
+  ) {
+    return this.dashboardService.getOverdueBooksByUser(req.user.sub, +page, +limit);
   }
 
 }

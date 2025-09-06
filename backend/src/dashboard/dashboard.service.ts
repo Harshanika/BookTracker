@@ -45,14 +45,24 @@ export class DashboardService {
     };
   }
 
-  async getBorrowedBooksByUser(userId: number) {
-    return this.bookRepository.find({ 
+  async getBorrowedBooksByUser(userId: number, page = 1, limit = 10) {
+    const [books, total] = await this.bookRepository.findAndCount({
       where: { 
         owner: { id: userId },
         status: 'borrowed'
       },
-      relations: ['owner']
+      relations: ['owner'],
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      books,
+    };
   }
   async getOwnedBooksByUser(userId: number, page = 1, limit = 10) {
     const [books, total] = await this.bookRepository.findAndCount({
@@ -71,15 +81,31 @@ export class DashboardService {
     };
   }
 
-  async getOverdueBooksByUser(userId: number) {
+  async getOverdueBooksByUser(userId: number, page = 1, limit = 10) {
     const currentDate = new Date();
-    return this.lendingRepository
+    const queryBuilder = this.lendingRepository
       .createQueryBuilder('lending')
       .leftJoinAndSelect('lending.book', 'book')
       .leftJoinAndSelect('book.owner', 'owner')
       .where('book.owner.id = :userId', { userId })
       .andWhere('lending.expectedReturnDate < :currentDate', { currentDate })
-      .andWhere('lending.actualReturnDate IS NULL')
+      .andWhere('lending.actualReturnDate IS NULL');
+
+    // Get total count
+    const total = await queryBuilder.getCount();
+
+    // Get paginated results
+    const lendingRecords = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
       .getMany();
+
+    return {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      lendingRecords,
+    };
   }
 }
