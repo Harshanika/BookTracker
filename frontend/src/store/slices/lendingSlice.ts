@@ -48,7 +48,7 @@ export const lendBook = createAsyncThunk(
   async (lendingData: { bookId: string; borrowerName: string; expectedReturnDate?: string }, { rejectWithValue }) => {
     try {
       // ✅ apiRequest automatically includes the token
-      const data = await apiRequest('/books/lend', {
+      const data = await apiRequest('/api/lending/book', {
         method: 'POST',
         body: JSON.stringify(lendingData),
       });
@@ -65,7 +65,7 @@ export const returnBook = createAsyncThunk(
   async (lendingId: string, { rejectWithValue }) => {
     try {
       // ✅ apiRequest automatically includes the token
-      await apiRequest(`/lending/${lendingId}/return`, {
+      await apiRequest(`/api/lending/${lendingId}/return`, {
         method: 'PUT',
       });
       
@@ -80,7 +80,7 @@ export const fetchActiveBorrowings = createAsyncThunk(
   'lending/fetchActiveBorrowings',
   async (_, { rejectWithValue }) => {
     try {
-      const data = await apiRequest('/lending/active');
+      const data = await apiRequest('/api/lending/active');
       return data;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch active borrowings');

@@ -68,6 +68,7 @@ export default function LendBook() {
 
             const lendingData = {
                 bookId,
+                borrowerId: borrowerType === 'user' ? selectedUserId : undefined,
                 borrowerName: finalBorrowerName,
                 expectedReturnDate: expectedReturnDate || undefined
             };
@@ -84,7 +85,7 @@ export default function LendBook() {
             
             // Navigate to lending history after 2 seconds
             setTimeout(() => {
-                navigate("/lent-book-history");
+                // navigate("/lent-book-history");
             }, 2000);
             
         } catch (error: any) {
