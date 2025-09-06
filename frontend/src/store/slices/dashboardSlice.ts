@@ -61,7 +61,7 @@ export const getUserOwnedBooks = createAsyncThunk(
   'dashboard/getUserOwned',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/api/books/my-books');
+      const response = await apiRequest('/api/dashboard/owned');
       const totalBooks = response.data?.length || response.length || 0;
       return totalBooks;
     } catch (error: any) {
@@ -75,7 +75,7 @@ export const getBorrowedBooks = createAsyncThunk(
   'dashboard/getBorrowed',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/api/books/borrowed');
+      const response = await apiRequest('/api/dashboard/borrowed');
       const borrowedBooks = (response.data || response).filter(
         (book: any) => book.status === 'borrowed'
       ).length;
@@ -91,7 +91,7 @@ export const getOverdueBooks = createAsyncThunk(
   'dashboard/getOverdue',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/api/lending/history');
+      const response = await apiRequest('/api/dashboard/overdue');
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
