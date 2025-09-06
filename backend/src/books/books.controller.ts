@@ -17,17 +17,6 @@ export class BooksController {
       const [data, total] = await this.booksService.findAllPaginated(page, limit);
       return { data, total, page, limit };
   }
-  // @Get()
-  // findAll() {
-  //   return this.booksService.findAll();
-  // }
-
-  @UseGuards(AuthGuard)
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.booksService.findOne(Number(id));
-  }
-
 
   @UseGuards(AuthGuard)
   @Post('add')
@@ -52,13 +41,28 @@ export class BooksController {
   }
 
   @UseGuards(AuthGuard)
-  @Post('my-books')
-  async get(@Body() createBookDto: CreateBookDto, @Req() req: AuthenticatedRequest) {
-    if (!createBookDto.title || !createBookDto.author || !createBookDto.genre || !createBookDto.status) {
-      throw new Error('Missing required fields: title, author, genre, status');
-    }
-    return this.booksService.create(createBookDto, req.user.sub);
+  @Get('my-books')
+  async getMyBooks(@Req() req: AuthenticatedRequest) {
+    return this.booksService.findUserBooks(req.user.sub);
   }
 
-  
+  @UseGuards(AuthGuard)
+  @Post('lend')
+  async lendBook(
+    @Body() lendingData: { bookId: string; borrowerName: string; expectedReturnDate?: string },
+    @Req() req: AuthenticatedRequest
+  ) {
+    return this.booksService.lendBook(
+      Number(lendingData.bookId),
+      lendingData.borrowerName,
+      req.user.sub,
+      lendingData.expectedReturnDate ? new Date(lendingData.expectedReturnDate) : undefined
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('my-available-books')
+  async getMyAvailableBooks(@Req() req: AuthenticatedRequest) {
+    return this.booksService.findUserAvailableBooks(req.user.sub);
+  }
 }

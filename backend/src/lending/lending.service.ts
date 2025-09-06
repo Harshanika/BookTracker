@@ -37,21 +37,6 @@ export class LendingService {
     return this.lendingRepo.save(record);
   }
 
-  async markReturned(recordId: number) {
-    const record = await this.lendingRepo.findOne({
-      where: { id: recordId },
-      relations: ['book'],
-    });
-    if (!record) throw new NotFoundException('Lending record not found');
-
-    record.actualReturnDate = new Date();
-
-    // mark book back as available
-    record.book.status = 'available';
-    await this.bookRepo.save(record.book);
-
-    return this.lendingRepo.save(record);
-  }
 
   async getHistory(bookId: number) {
     return this.lendingRepo.find({
@@ -66,6 +51,44 @@ export class LendingService {
     return this.lendingRepo.find({
       where: { actualReturnDate: undefined }, // use undefined, not null
       relations: ['book'],
+    });
+  }
+
+  async getUserLendingHistory(userId: number) {
+    return this.lendingRepo.find({
+      where: { book: { owner: { id: userId } } },
+      relations: ['book', 'book.owner'],
+      order: { lendDate: 'DESC' },
+    });
+  }
+
+  async markReturned(recordId: number, userId: number) {
+    const record = await this.lendingRepo.findOne({
+      where: { 
+        id: recordId,
+        book: { owner: { id: userId } }
+      },
+      relations: ['book'],
+    });
+    if (!record) throw new NotFoundException('Lending record not found or you do not own this book');
+
+    record.actualReturnDate = new Date();
+
+    // mark book back as available
+    record.book.status = 'available';
+    await this.bookRepo.save(record.book);
+
+    return this.lendingRepo.save(record);
+  }
+
+  async getUserActiveBorrowings(userId: number) {
+    return this.lendingRepo.find({
+      where: { 
+        actualReturnDate: undefined,
+        book: { owner: { id: userId } }
+      },
+      relations: ['book', 'book.owner'],
+      order: { lendDate: 'DESC' },
     });
   }
 }

@@ -6,6 +6,7 @@ import { Book } from './book.entity';
 import {JwtModule} from "@nestjs/jwt";
 import { User } from '../users/user.entity';
 import { UsersModule } from '../users/users.module';
+import { LendingRecord } from '../lending/lending.entity';
 
 @Module({
   imports: [JwtModule.registerAsync({
@@ -15,6 +16,7 @@ import { UsersModule } from '../users/users.module';
       }),
   }),TypeOrmModule.forFeature([Book]),
   TypeOrmModule.forFeature([User]),
+  TypeOrmModule.forFeature([LendingRecord]),
   UsersModule],
   providers: [BooksService],
   controllers: [BooksController],

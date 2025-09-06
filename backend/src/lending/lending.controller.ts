@@ -1,35 +1,25 @@
-import { Controller, Post, Body, Param, Get, Patch } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Patch, UseGuards, Req } from '@nestjs/common';
 import { LendingService } from './lending.service';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { AuthenticatedRequest } from '../dashboard/interfaces/authenticated.request';
 
 @Controller('lending')
+@UseGuards(AuthGuard)
 export class LendingController {
   constructor(private readonly lendingService: LendingService) {}
 
-  @Post()
-  lendBook(
-    @Body()
-    dto: {
-      bookId: number;
-      borrowerName: string;
-      lendDate: Date;
-      expectedReturnDate?: Date;
-    },
-  ) {
-    return this.lendingService.lendBook(dto);
+  @Get('history')
+  async getLendingHistory(@Req() req: AuthenticatedRequest) {
+    return this.lendingService.getUserLendingHistory(req.user.sub);
   }
 
   @Patch(':id/return')
-  markReturned(@Param('id') id: string) {
-    return this.lendingService.markReturned(+id);
-  }
-
-  @Get(':bookId/history')
-  getHistory(@Param('bookId') bookId: string) {
-    return this.lendingService.getHistory(+bookId);
+  async markReturned(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.lendingService.markReturned(+id, req.user.sub);
   }
 
   @Get('active')
-  getActiveBorrowings() {
-    return this.lendingService.getActiveBorrowings();
+  async getActiveBorrowings(@Req() req: AuthenticatedRequest) {
+    return this.lendingService.getUserActiveBorrowings(req.user.sub);
   }
 }

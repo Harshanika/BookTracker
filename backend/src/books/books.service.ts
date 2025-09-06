@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Book } from './book.entity';
 import { User } from '../users/user.entity';
 import { CreateBookDto } from './create-book.dto';
+import { LendingRecord } from '../lending/lending.entity';
 
 @Injectable()
 export class BooksService {
@@ -12,6 +13,8 @@ export class BooksService {
         private readonly bookRepository: Repository<Book>,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
+        @InjectRepository(LendingRecord)
+        private readonly lendingRepository: Repository<LendingRecord>,
     ) {}
 
     async findAll(): Promise<Book[]> {
@@ -57,5 +60,51 @@ export class BooksService {
             take: limit,
         });
         return [data, count];
+    }
+
+    async findUserBooks(userId: number): Promise<Book[]> {
+        return this.bookRepository.find({
+            where: { owner: { id: userId } },
+            relations: ['owner'],
+            // order: { createdAt: 'DESC' },
+        });
+    }
+
+    async findUserAvailableBooks(userId: number): Promise<Book[]> {
+        return this.bookRepository.find({
+            where: { owner: { id: userId }, status: 'available' },
+            relations: ['owner'],
+        });
+    }
+
+    async lendBook(bookId: number, borrowerName: string, ownerId: number, expectedReturnDate?: Date): Promise<LendingRecord> {
+        // Find the book and verify ownership
+        const book = await this.bookRepository.findOne({
+            where: { id: bookId, owner: { id: ownerId } },
+            relations: ['owner']
+        });
+
+        if (!book) {
+            throw new Error('Book not found or you do not own this book');
+        }
+
+        if (book.status !== 'available') {
+            throw new Error('Book is not available for lending');
+        }
+
+        // Create lending record
+        const lendingRecord = this.lendingRepository.create({
+            book,
+            borrowerName,
+            lendDate: new Date(),
+            expectedReturnDate,
+        });
+
+        // Update book status to borrowed
+        book.status = 'borrowed';
+        await this.bookRepository.save(book);
+
+        // Save lending record
+        return this.lendingRepository.save(lendingRecord);
     }
 }

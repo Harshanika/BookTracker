@@ -12,7 +12,14 @@ export class UsersService {
     ) {}
   private users: User[] = [];
 
-  findOne(id: number): User | undefined {
-    return this.users.find((u) => u.id === id);
+  async findAll(): Promise<User[]> {
+    return this.userRepository.find({
+      select: ['id', 'email', 'fullname', 'createdAt'],
+      order: { fullname: 'ASC' },
+    });
+  }
+
+  async findOne(id: number): Promise<User | null> {
+    return this.userRepository.findOne({ where: { id } });
   }
 }
