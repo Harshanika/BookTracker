@@ -30,6 +30,13 @@ interface DashboardState {
     limit: number;
     totalPages: number;
   };
+  borrowedBooks: {
+    books: any[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
   loading: boolean;
   error: string | null;
   lastUpdated: string | null;
@@ -44,6 +51,13 @@ const initialState: DashboardState = {
     recentLending: [],
   },
   ownedBooks: {
+    books: [],
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+  },
+  borrowedBooks: {
     books: [],
     total: 0,
     page: 1,
@@ -83,16 +97,13 @@ export const getUserOwnedBooks = createAsyncThunk(
   }
 );
 
-// ✅ Async thunk to get borrowed books count
+// ✅ Async thunk to get borrowed books with pagination
 export const getBorrowedBooks = createAsyncThunk(
   'dashboard/getBorrowed',
-  async (_, { rejectWithValue }) => {
+  async (params: { page: number; limit: number }, { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/api/dashboard/borrowed');
-      const borrowedBooks = (response.data || response).filter(
-        (book: any) => book.status === 'borrowed'
-      ).length;
-      return borrowedBooks;
+      const response = await apiRequest(`/api/dashboard/borrowed?page=${params.page}&limit=${params.limit}`);
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch borrowed books');
     }
@@ -211,9 +222,19 @@ const dashboardSlice = createSlice({
         state.error = action.payload as string;
       })
       // Get Borrowed Books
+      .addCase(getBorrowedBooks.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(getBorrowedBooks.fulfilled, (state, action) => {
-        state.stats.borrowedBooks = action.payload.data.length || action.payload.length || 0;
+        state.loading = false;
+        state.borrowedBooks = action.payload;
+        state.stats.borrowedBooks = action.payload.total || 0;
         state.lastUpdated = new Date().toISOString();
+      })
+      .addCase(getBorrowedBooks.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
       // Get Overdue Books
       .addCase(getOverdueBooks.fulfilled, (state, action) => {

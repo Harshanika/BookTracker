@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
+import { getBorrowedBooks } from "../store/slices/dashboardSlice";
 import BookCard from "../components/BookCard";
 
 interface BorrowedBook {
@@ -13,63 +14,29 @@ interface BorrowedBook {
 }
 
 export default function BorrowedBooks() {
-    const [borrowedBooks, setBorrowedBooks] = useState<BorrowedBook[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+    const dispatch = useAppDispatch();
+    const { borrowedBooks, loading, error } = useAppSelector(state => state.dashboard);
     const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [booksPerPage] = useState(10);
 
     useEffect(() => {
-        fetchBorrowedBooks();
-    }, []);
+        dispatch(getBorrowedBooks({ page: currentPage, limit: booksPerPage }));
+    }, [dispatch, currentPage, booksPerPage]);
 
-    const fetchBorrowedBooks = async () => {
-        try {
-            // This would be your actual API endpoint for borrowed books
-            const response = await axios.get("http://localhost:4000/books/borrowed", {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            });
-            setBorrowedBooks(response.data.data || response.data);
-            setLoading(false);
-        } catch (err: any) {
-            // Fallback to dummy data if API not ready
-            setBorrowedBooks([
-                {
-                    id: "1",
-                    title: "The Great Gatsby",
-                    author: "F. Scott Fitzgerald",
-                    borrowerName: "John Doe",
-                    lendDate: "2024-01-15",
-                    expectedReturnDate: "2024-02-15",
-                    coverUrl: ""
-                },
-                {
-                    id: "2",
-                    title: "1984",
-                    author: "George Orwell",
-                    borrowerName: "Jane Smith",
-                    lendDate: "2024-01-20",
-                    expectedReturnDate: "2024-02-20",
-                    coverUrl: ""
-                }
-            ]);
-            setLoading(false);
-        }
-    };
-
-    const filteredBooks = borrowedBooks.filter(book =>
+    const filteredBooks = borrowedBooks.books?.filter((book: any) =>
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.borrowerName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+        book.borrowerName?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
     const markAsReturned = async (bookId: string) => {
         try {
-            await axios.put(`http://localhost:4000/books/${bookId}/return`, {}, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            });
-            setBorrowedBooks(prev => prev.filter(book => book.id !== bookId));
+            // TODO: Implement return book action in Redux
+            // For now, just refresh the data
+            dispatch(getBorrowedBooks({ page: currentPage, limit: booksPerPage }));
         } catch (err: any) {
-            setError("Failed to mark book as returned");
+            console.error("Failed to mark book as returned:", err);
         }
     };
 
@@ -93,7 +60,7 @@ export default function BorrowedBooks() {
     return (
         <div className="container mt-5">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="text-primary mb-0">🤝 Borrowed Books ({borrowedBooks.length})</h2>
+                <h2 className="text-primary mb-0">🤝 Borrowed Books ({borrowedBooks.total || 0})</h2>
                 <button className="btn btn-primary" onClick={() => window.location.href = '/lend-book'}>
                     + Lend New Book
                 </button>
@@ -167,6 +134,51 @@ export default function BorrowedBooks() {
                     ))}
                 </div>
             )}
+
+            {/* Pagination */}
+            {borrowedBooks.totalPages > 1 && (
+                <div className="d-flex justify-content-center mt-4">
+                    <nav>
+                        <ul className="pagination">
+                            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                <button 
+                                    className="page-link" 
+                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </button>
+                            </li>
+                            
+                            {Array.from({ length: borrowedBooks.totalPages }, (_, i) => i + 1).map(page => (
+                                <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => setCurrentPage(page)}
+                                    >
+                                        {page}
+                                    </button>
+                                </li>
+                            ))}
+                            
+                            <li className={`page-item ${currentPage === borrowedBooks.totalPages ? 'disabled' : ''}`}>
+                                <button 
+                                    className="page-link" 
+                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                    disabled={currentPage === borrowedBooks.totalPages}
+                                >
+                                    Next
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            )}
+
+            {/* Pagination Info */}
+            <div className="text-center mt-3 text-muted">
+                Showing {((currentPage - 1) * booksPerPage) + 1} to {Math.min(currentPage * booksPerPage, borrowedBooks.total || 0)} of {borrowedBooks.total || 0} borrowed books
+            </div>
         </div>
     );
 }
