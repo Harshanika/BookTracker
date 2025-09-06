@@ -46,15 +46,40 @@ export class DashboardService {
   }
 
   async getBorrowedBooksByUser(userId: number, page = 1, limit = 10) {
-    const [books, total] = await this.bookRepository.findAndCount({
-      where: { 
-        owner: { id: userId },
-        status: 'borrowed'
-      },
-      relations: ['owner'],
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    // Use query builder to join with lending records for borrower information
+    const queryBuilder = this.lendingRepository
+      .createQueryBuilder('lending')
+      .leftJoinAndSelect('lending.book', 'book')
+      .leftJoinAndSelect('book.owner', 'owner')
+      .leftJoinAndSelect('lending.borrower', 'borrower')
+      .where('book.owner.id = :userId', { userId })
+      .andWhere('book.status = :status', { status: 'borrowed' })
+      .andWhere('lending.actualReturnDate IS NULL');
+
+    // Get total count
+    const total = await queryBuilder.getCount();
+
+    // Get paginated results
+    const lendingRecords = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    // Transform the data to include borrower information
+    const books = lendingRecords.map(record => ({
+      id: record.book.id,
+      title: record.book.title,
+      author: record.book.author,
+      genre: record.book.genre,
+      status: record.book.status,
+      owner: record.book.owner,
+      // Borrower information
+      borrowerName: record.borrowerName,
+      borrower: record.borrower,
+      lendDate: record.lendDate,
+      expectedReturnDate: record.expectedReturnDate,
+      actualReturnDate: record.actualReturnDate,
+    }));
 
     return {
       total,

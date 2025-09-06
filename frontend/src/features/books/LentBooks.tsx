@@ -8,7 +8,7 @@ export default function LentBooks() {
     const [returningId, setReturningId] = useState<number | null>(null);
 
     useEffect(() => {
-        dispatch(fetchLendingHistory());
+        // dispatch(fetchLendingHistory());
         dispatch(clearError());
     }, [dispatch]);
 
@@ -17,7 +17,7 @@ export default function LentBooks() {
         try {
             await dispatch(returnBook(lendingId.toString())).unwrap();
             // Refresh the lending history after returning
-            dispatch(fetchLendingHistory());
+            // dispatch(fetchLendingHistory());
         } catch (error) {
             console.error("Failed to return book:", error);
         } finally {

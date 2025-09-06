@@ -104,17 +104,27 @@ export default function BorrowedBooks() {
                                         height={80}
                                     />
                                     <div className="ms-3">
-                                        <h5 className="mb-1">{book.title}</h5>
+                                        <div className="d-flex align-items-center mb-1">
+                                            <h5 className="mb-0 me-2">{book.title}</h5>
+                                            <span className="badge bg-info text-dark">Borrowed</span>
+                                        </div>
                                         <p className="mb-1 text-muted">{book.author}</p>
                                         <div className="small text-muted">
-                                            <span className="me-3">Borrowed by: <strong>{book.borrowerName}</strong></span>
-                                            <span className="me-3">Lent on: {new Date(book.lendDate).toLocaleDateString()}</span>
-                                            {book.expectedReturnDate && (
-                                                <span className={`me-3 ${isOverdue(book.expectedReturnDate) ? 'text-danger' : ''}`}>
-                                                    Expected return: {new Date(book.expectedReturnDate).toLocaleDateString()}
-                                                    {isOverdue(book.expectedReturnDate) && ' (OVERDUE)'}
-                                                </span>
-                                            )}
+                                            <div className="mb-1">
+                                                <span className="me-3">Borrowed by: <strong className="text-primary">{book.borrowerName}</strong></span>
+                                                {book.borrower?.email && (
+                                                    <span className="text-muted">({book.borrower.email})</span>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <span className="me-3">Lent on: {new Date(book.lendDate).toLocaleDateString()}</span>
+                                                {book.expectedReturnDate && (
+                                                    <span className={`me-3 ${isOverdue(book.expectedReturnDate) ? 'text-danger' : ''}`}>
+                                                        Expected return: {new Date(book.expectedReturnDate).toLocaleDateString()}
+                                                        {isOverdue(book.expectedReturnDate) && ' (OVERDUE)'}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
