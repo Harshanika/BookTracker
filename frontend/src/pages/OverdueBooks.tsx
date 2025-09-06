@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { getOverdueBooks } from "../store/slices/dashboardSlice";
+import { returnBook } from "../store/slices/lendingSlice";
 import BookCard from "../components/BookCard";
+import ReturnBookModal from "../components/ReturnBookModal";
 
 interface OverdueBook {
     id: string;
@@ -20,6 +22,10 @@ export default function OverdueBooks() {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [booksPerPage] = useState(10);
+    const [returningBook, setReturningBook] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState("");
+    const [showReturnModal, setShowReturnModal] = useState(false);
+    const [selectedBook, setSelectedBook] = useState<any>(null);
 
     useEffect(() => {
         dispatch(getOverdueBooks({ page: currentPage, limit: booksPerPage }));
@@ -32,14 +38,39 @@ export default function OverdueBooks() {
                record.borrowerName?.toLowerCase().includes(searchTerm.toLowerCase());
     }) || [];
 
-    const markAsReturned = async (bookId: string) => {
+    const handleReturnClick = (record: any) => {
+        setSelectedBook(record);
+        setShowReturnModal(true);
+    };
+
+    const handleReturnConfirm = async (actualReturnDate: string, returnNote: string) => {
+        if (!selectedBook) return;
+        
         try {
-            // TODO: Implement return book action in Redux
-            // For now, just refresh the data
+            setReturningBook(selectedBook.id);
+            await dispatch(returnBook({
+                lendingId: selectedBook.id,
+                actualReturnDate,
+                returnNote
+            })).unwrap();
+            setSuccessMessage("Book returned successfully!");
+            // Refresh the overdue books list after successful return
             dispatch(getOverdueBooks({ page: currentPage, limit: booksPerPage }));
+            // Clear success message after 3 seconds
+            setTimeout(() => setSuccessMessage(""), 3000);
+            // Close modal
+            setShowReturnModal(false);
+            setSelectedBook(null);
         } catch (err: any) {
             console.error("Failed to mark book as returned:", err);
+        } finally {
+            setReturningBook(null);
         }
+    };
+
+    const handleReturnCancel = () => {
+        setShowReturnModal(false);
+        setSelectedBook(null);
     };
 
     const sendReminder = async (bookId: string) => {
@@ -95,6 +126,7 @@ export default function OverdueBooks() {
             </div>
 
             {error && <div className="alert alert-danger mb-4">{error}</div>}
+            {successMessage && <div className="alert alert-success mb-4">{successMessage}</div>}
 
             {/* Overdue Books List */}
             {filteredBooks.length === 0 ? (
@@ -149,9 +181,10 @@ export default function OverdueBooks() {
                                     <div className="d-flex gap-2">
                                         <button 
                                             className="btn btn-success btn-sm"
-                                            onClick={() => markAsReturned(book.id)}
+                                            onClick={() => handleReturnClick(record)}
+                                            disabled={returningBook === record.id}
                                         >
-                                            Mark as Returned
+                                            {returningBook === record.id ? "Returning..." : "Mark as Returned"}
                                         </button>
                                         <button 
                                             className="btn btn-warning btn-sm"
@@ -211,6 +244,16 @@ export default function OverdueBooks() {
             <div className="text-center mt-3 text-muted">
                 Showing {((currentPage - 1) * booksPerPage) + 1} to {Math.min(currentPage * booksPerPage, overdueBooks.total || 0)} of {overdueBooks.total || 0} overdue books
             </div>
+
+            {/* Return Book Modal */}
+            <ReturnBookModal
+                isOpen={showReturnModal}
+                onClose={handleReturnCancel}
+                onConfirm={handleReturnConfirm}
+                bookTitle={selectedBook?.book?.title || ''}
+                borrowerName={selectedBook?.borrowerName || ''}
+                loading={returningBook !== null}
+            />
         </div>
     );
 }
