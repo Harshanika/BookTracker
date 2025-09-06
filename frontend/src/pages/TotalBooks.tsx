@@ -18,6 +18,7 @@ export default function TotalBooks() {
     const { ownedBooks, loading, error } = useAppSelector(state => state.dashboard);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterGenre, setFilterGenre] = useState("");
+    const [filterStatus, setFilterStatus] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [booksPerPage] = useState(12);
 
@@ -29,7 +30,8 @@ export default function TotalBooks() {
         const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             book.author.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesGenre = filterGenre === "" || book.genre === filterGenre;
-        return matchesSearch && matchesGenre;
+        const matchesStatus = filterStatus === "" || book.status === filterStatus;
+        return matchesSearch && matchesGenre && matchesStatus;
     }) || [];
 
     const genres = Array.from(new Set(ownedBooks.books?.map((book: any) => book.genre) || []));
@@ -68,7 +70,7 @@ export default function TotalBooks() {
             <div className="card shadow-sm mb-4">
                 <div className="card-body">
                     <div className="row">
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Search Books</label>
                             <input
                                 type="text"
@@ -78,7 +80,7 @@ export default function TotalBooks() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Filter by Genre</label>
                             <select
                                 className="form-select"
@@ -90,6 +92,32 @@ export default function TotalBooks() {
                                 <option key={genre} value={genre}>{genre}</option>
                             ))}
                             </select>
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label">Filter by Status</label>
+                            <select
+                                className="form-select"
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                            >
+                                <option value="">All Status</option>
+                                <option value="available">Available</option>
+                                <option value="borrowed">Borrowed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="row mt-3">
+                        <div className="col-12">
+                            <button 
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => {
+                                    setSearchTerm("");
+                                    setFilterGenre("");
+                                    setFilterStatus("");
+                                }}
+                            >
+                                Clear All Filters
+                            </button>
                         </div>
                     </div>
                 </div>
