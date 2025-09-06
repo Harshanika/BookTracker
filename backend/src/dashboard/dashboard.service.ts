@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Book } from '../books/book.entity'; // Adjust the path as needed
 import { User } from '../users/user.entity';
+import { LendingRecord } from '../lending/lending.entity';
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
 
@@ -10,18 +11,48 @@ export class DashboardService {
     constructor(
         @InjectRepository(Book)
         private readonly bookRepository: Repository<Book>,
+        @InjectRepository(LendingRecord)
+        private readonly lendingRepository: Repository<LendingRecord>,
     ) {}
-  getStats() {
+  async getStats(userId: number) {
+    // Get total books owned by user
+    const totalBooks = await this.bookRepository.count({
+      where: { owner: { id: userId } }
+    });
+
+    // Get borrowed books (books lent out by user)
+    const borrowedBooks = await this.bookRepository.count({
+      where: { 
+        owner: { id: userId },
+        status: 'borrowed'
+      }
+    });
+
+    // Get overdue books (books with expected return date passed and not returned)
+    const currentDate = new Date();
+    const overdueBooks = await this.lendingRepository
+      .createQueryBuilder('lending')
+      .leftJoin('lending.book', 'book')
+      .where('book.owner.id = :userId', { userId })
+      .andWhere('lending.expectedReturnDate < :currentDate', { currentDate })
+      .andWhere('lending.actualReturnDate IS NULL')
+      .getCount();
+
     return {
-      totalBooks: 10,
-      borrowedBooks: 3,
-      overdueBooks: 1,
+      totalBooks,
+      borrowedBooks,
+      overdueBooks,
     };
   }
 
-  getBorrowedBooksByUser(userId: number) {
-    userId = 1;
-    return this.bookRepository.find({ where: { owner: { id: userId } } });
+  async getBorrowedBooksByUser(userId: number) {
+    return this.bookRepository.find({ 
+      where: { 
+        owner: { id: userId },
+        status: 'borrowed'
+      },
+      relations: ['owner']
+    });
   }
   async getOwnedBooksByUser(userId: number, page = 1, limit = 10) {
     const [books, total] = await this.bookRepository.findAndCount({
@@ -40,8 +71,15 @@ export class DashboardService {
     };
   }
 
-  getOverdueBooksByUser(userId: number) {
-    userId = 1;
-    return this.bookRepository.find({ where: { owner: { id: userId } } });
+  async getOverdueBooksByUser(userId: number) {
+    const currentDate = new Date();
+    return this.lendingRepository
+      .createQueryBuilder('lending')
+      .leftJoinAndSelect('lending.book', 'book')
+      .leftJoinAndSelect('book.owner', 'owner')
+      .where('book.owner.id = :userId', { userId })
+      .andWhere('lending.expectedReturnDate < :currentDate', { currentDate })
+      .andWhere('lending.actualReturnDate IS NULL')
+      .getMany();
   }
 }

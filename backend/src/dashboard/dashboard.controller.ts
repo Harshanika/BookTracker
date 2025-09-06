@@ -10,9 +10,10 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService,
               private readonly booksService: BooksService) {}
 
+  @UseGuards(AuthGuard)
   @Get('stats')
-  getStats() {
-    return this.dashboardService.getStats();
+  getStats(@Req() req: AuthenticatedRequest) {
+    return this.dashboardService.getStats(req.user.sub);
   }
   @UseGuards(AuthGuard)
   @Get('borrowed')

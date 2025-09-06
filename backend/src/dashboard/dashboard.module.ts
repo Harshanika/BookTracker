@@ -5,6 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { BooksModule } from '../books/books.module';
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Book } from "../books/book.entity"; // Import BooksModule to access book data
+import { LendingRecord } from '../lending/lending.entity';
 
 @Module({
    imports: [
@@ -14,7 +15,7 @@ import { Book } from "../books/book.entity"; // Import BooksModule to access boo
              signOptions: { expiresIn: '1h' },
          }),
     }),
-    TypeOrmModule.forFeature([Book]),
+    TypeOrmModule.forFeature([Book, LendingRecord]),
     BooksModule],
 
   providers: [DashboardService],
