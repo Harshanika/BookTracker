@@ -11,13 +11,13 @@ interface User {
 interface UserState {
   users: User[];
   usersLoading: boolean;
-  error: string | null;
+  usersError: string | null;
 }
 
 const initialState: UserState = {
   users: [],
   usersLoading: false,
-  error: null,
+  usersError: null,
 };
 
 // Fetch all users
@@ -39,7 +39,10 @@ const userSlice = createSlice({
   reducers: {
     clearUsers: (state) => {
       state.users = [];
-      state.error = null;
+      state.usersError = null;
+    },
+    clearUsersError: (state) => {
+      state.usersError = null;
     },
     updateUsers: (state, action: PayloadAction<Partial<User>>) => {
       state.users = [...state.users, action.payload as User];
@@ -50,19 +53,19 @@ const userSlice = createSlice({
       // Fetch all users
       .addCase(fetchAllUsers.pending, (state) => {
         state.usersLoading = true;
-        state.error = null;
+        state.usersError = null;
       })
       .addCase(fetchAllUsers.fulfilled, (state, action) => {
         state.usersLoading = false;
-        state.error = null;
+        state.usersError = null;
         state.users = action.payload;
       })
       .addCase(fetchAllUsers.rejected, (state, action) => {
         state.usersLoading = false;
-        state.error = action.payload as string;
+        state.usersError = action.payload as string;
       })
   },
 });
 
-export const { clearUsers, updateUsers } = userSlice.actions;
+export const { clearUsers, clearUsersError, updateUsers } = userSlice.actions;
 export default userSlice.reducer;

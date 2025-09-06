@@ -12,7 +12,7 @@ export default function LendBook() {
     // Redux state
     const { userBooks, loading: booksLoading } = useAppSelector(state => state.book);
     const { loading: lendingLoading, error: lendingError } = useAppSelector(state => state.lending);
-    const { users, usersLoading, error: usersError } = useAppSelector(state => state.user);
+    const { users, usersLoading, usersError } = useAppSelector(state => state.user);
     
     // Local state
     const [bookId, setBookId] = useState("");
