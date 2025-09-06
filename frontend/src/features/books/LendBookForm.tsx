@@ -70,6 +70,7 @@ export default function LendBook() {
                 bookId,
                 borrowerId: borrowerType === 'user' ? selectedUserId : undefined,
                 borrowerName: finalBorrowerName,
+                lendDate: lendDate,
                 expectedReturnDate: expectedReturnDate || undefined
             };
 
