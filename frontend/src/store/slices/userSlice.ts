@@ -3,7 +3,7 @@ import { apiRequest } from '../../services/api';
 
 interface User {
   id: string;
-  name: string;
+  fullname: string;
   email: string;
   // Add other user fields as needed
 }
@@ -25,7 +25,7 @@ export const fetchAllUsers = createAsyncThunk(
   'user/fetchAllUsers',
   async (_, { rejectWithValue }) => {
     try {
-      const data = await apiRequest('/users');
+      const data = await apiRequest('/api/users/all');
       return data;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch users');

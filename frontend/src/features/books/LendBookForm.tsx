@@ -61,7 +61,7 @@ export default function LendBook() {
             let finalBorrowerName = '';
             if (borrowerType === 'user') {
                 const selectedUser = users.find(user => user.id.toString() === selectedUserId);
-                finalBorrowerName = selectedUser ? selectedUser.name : '';
+                finalBorrowerName = selectedUser ? selectedUser.fullname : '';
             } else {
                 finalBorrowerName = borrowerName;
             }
@@ -180,7 +180,7 @@ export default function LendBook() {
                                     <option value="">-- Select a User --</option>
                                     {users.map((user: any) => (
                                         <option key={user.id} value={user.id}>
-                                            {user.name} ({user.email})
+                                            {user.fullname} ({user.email})
                                         </option>
                                     ))}
                                 </select>
