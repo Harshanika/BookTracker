@@ -3,43 +3,53 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LendingRecord } from './lending.entity';
 import { Book } from '../books/book.entity';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class LendingService {
-  constructor(
-    @InjectRepository(LendingRecord)
-    private lendingRepo: Repository<LendingRecord>,
-    @InjectRepository(Book)
-    private bookRepo: Repository<Book>,
-  ) {}
 
-  async lendBook(dto: {
-    bookId: number;
-    borrowerName: string;
-    lendDate: Date;
-    expectedReturnDate?: Date;
-  }) {
-    const book = await this.bookRepo.findOne({ where: { id: dto.bookId } });
+  constructor(
+    @InjectRepository(Book)
+    private readonly bookRepository: Repository<Book>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(LendingRecord)
+    private readonly lendingRepository: Repository<LendingRecord>,
+) {}
+
+
+  async lendBook(bookId: number, borrowerName?: string, borrowerId?: number, lendDate?: Date, expectedReturnDate?: Date) {
+    const book = await this.bookRepository.findOne({ where: { id: bookId } });
     if (!book) throw new NotFoundException('Book not found');
 
     // mark book as borrowed
     book.status = 'borrowed';
-    await this.bookRepo.save(book);
+    await this.bookRepository.save(book);
+
+    // Find borrower if borrowerId is provided
+    let borrower: User | undefined = undefined;
+    if (borrowerId) {
+      const foundBorrower = await this.userRepository.findOne({ where: { id: borrowerId } });
+      if (foundBorrower) {
+        borrower = foundBorrower;
+      }
+    }
 
     // lendBook
-    const record = this.lendingRepo.create({
+    const record = this.lendingRepository.create({
       book,
-      borrowerName: dto.borrowerName,
-      lendDate: dto.lendDate,
-      expectedReturnDate: dto.expectedReturnDate,
+      borrower: borrower || undefined,
+      borrowerName: borrowerName,
+      lendDate: lendDate || new Date(),
+      expectedReturnDate: expectedReturnDate,
       actualReturnDate: undefined, // use undefined, not null
     });
-    return this.lendingRepo.save(record);
+    return this.lendingRepository.save(record);
   }
 
 
   async getHistory(bookId: number) {
-    return this.lendingRepo.find({
+    return this.lendingRepository.find({
       where: { book: { id: bookId } },
       relations: ['book'],
       order: { lendDate: 'DESC' },
@@ -48,25 +58,23 @@ export class LendingService {
 
   // getActiveBorrowings
   async getActiveBorrowings() {
-    return this.lendingRepo.find({
+    return this.lendingRepository.find({
       where: { actualReturnDate: undefined }, // use undefined, not null
       relations: ['book'],
     });
   }
 
-  async getUserLendingHistory(userId: number) {
-    return this.lendingRepo.find({
-      where: { book: { owner: { id: userId } } },
+  async getUserLendingHistory() {
+    return this.lendingRepository.find({
       relations: ['book', 'book.owner'],
       order: { lendDate: 'DESC' },
     });
   }
 
-  async markReturned(recordId: number, userId: number) {
-    const record = await this.lendingRepo.findOne({
+  async markReturned(recordId: number) {
+    const record = await this.lendingRepository.findOne({
       where: { 
         id: recordId,
-        book: { owner: { id: userId } }
       },
       relations: ['book'],
     });
@@ -76,16 +84,15 @@ export class LendingService {
 
     // mark book back as available
     record.book.status = 'available';
-    await this.bookRepo.save(record.book);
+    await this.bookRepository.save(record.book);
 
-    return this.lendingRepo.save(record);
+    return this.lendingRepository.save(record);
   }
 
-  async getUserActiveBorrowings(userId: number) {
-    return this.lendingRepo.find({
+  async getUserActiveBorrowings() {
+    return this.lendingRepository.find({
       where: { 
         actualReturnDate: undefined,
-        book: { owner: { id: userId } }
       },
       relations: ['book', 'book.owner'],
       order: { lendDate: 'DESC' },

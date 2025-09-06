@@ -47,20 +47,6 @@ export class BooksController {
   }
 
   @UseGuards(AuthGuard)
-  @Post('lend')
-  async lendBook(
-    @Body() lendingData: { bookId: string; borrowerName: string; expectedReturnDate?: string },
-    @Req() req: AuthenticatedRequest
-  ) {
-    return this.booksService.lendBook(
-      Number(lendingData.bookId),
-      lendingData.borrowerName,
-      req.user.sub,
-      lendingData.expectedReturnDate ? new Date(lendingData.expectedReturnDate) : undefined
-    );
-  }
-
-  @UseGuards(AuthGuard)
   @Get('my-available-books')
   async getMyAvailableBooks(@Req() req: AuthenticatedRequest) {
     return this.booksService.findUserAvailableBooks(req.user.sub);
