@@ -12,11 +12,16 @@ export class UsersService {
     ) {}
   private users: User[] = [];
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find({
-      select: ['id', 'email', 'fullname', 'createdAt'],
-      order: { fullname: 'ASC' },
-    });
+  async findAll(currentUserId?: number): Promise<User[]> {
+    const queryBuilder = this.userRepository.createQueryBuilder('user')
+      .select(['user.id', 'user.email', 'user.fullname', 'user.createdAt'])
+      .orderBy('user.fullname', 'ASC');
+
+    if (currentUserId) {
+      queryBuilder.where('user.id != :currentUserId', { currentUserId });
+    }
+
+    return queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<User | null> {
