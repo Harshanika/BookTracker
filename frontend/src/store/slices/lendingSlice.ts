@@ -45,7 +45,7 @@ export const fetchLendingHistory = createAsyncThunk(
 
 export const lendBook = createAsyncThunk(
   'lending/lendBook',
-  async (lendingData: { bookId: string; borrowerName: string; expectedReturnDate?: string }, { rejectWithValue }) => {
+  async (lendingData: { bookId: string; borrowerName: string; lendDate: string; expectedReturnDate?: string }, { rejectWithValue }) => {
     try {
       // ✅ apiRequest automatically includes the token
       const data = await apiRequest('/api/lending/book', {
