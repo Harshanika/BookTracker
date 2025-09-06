@@ -37,6 +37,13 @@ interface DashboardState {
     limit: number;
     totalPages: number;
   };
+  overdueBooks: {
+    lendingRecords: any[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
   loading: boolean;
   error: string | null;
   lastUpdated: string | null;
@@ -59,6 +66,13 @@ const initialState: DashboardState = {
   },
   borrowedBooks: {
     books: [],
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+  },
+  overdueBooks: {
+    lendingRecords: [],
     total: 0,
     page: 1,
     limit: 10,
@@ -110,23 +124,13 @@ export const getBorrowedBooks = createAsyncThunk(
   }
 );
 
-// ✅ Async thunk to get overdue books count
+// ✅ Async thunk to get overdue books with pagination
 export const getOverdueBooks = createAsyncThunk(
   'dashboard/getOverdue',
-  async (_, { rejectWithValue }) => {
+  async (params: { page: number; limit: number }, { rejectWithValue }) => {
     try {
-      const response = await apiRequest('/api/dashboard/overdue');
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const overdueBooks = (response.data || response).filter(
-        (lending: any) => {
-          const lendDate = new Date(lending.lendDate);
-          return lending.status === 'lent' && lendDate < thirtyDaysAgo;
-        }
-      ).length;
-      
-      return overdueBooks;
+      const response = await apiRequest(`/api/dashboard/overdue?page=${params.page}&limit=${params.limit}`);
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch overdue books');
     }
@@ -237,9 +241,19 @@ const dashboardSlice = createSlice({
         state.error = action.payload as string;
       })
       // Get Overdue Books
+      .addCase(getOverdueBooks.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(getOverdueBooks.fulfilled, (state, action) => {
-        state.stats.overdueBooks = action.payload.data.length || action.payload.length || 0;
+        state.loading = false;
+        state.overdueBooks = action.payload;
+        state.stats.overdueBooks = action.payload.total || 0;
         state.lastUpdated = new Date().toISOString();
+      })
+      .addCase(getOverdueBooks.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
       // Refresh Stats
       .addCase(refreshDashboardStats.pending, (state) => {

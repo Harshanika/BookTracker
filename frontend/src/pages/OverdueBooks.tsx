@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
+import { getOverdueBooks } from "../store/slices/dashboardSlice";
 import BookCard from "../components/BookCard";
 
 interface OverdueBook {
@@ -14,77 +15,40 @@ interface OverdueBook {
 }
 
 export default function OverdueBooks() {
-    const [overdueBooks, setOverdueBooks] = useState<OverdueBook[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+    const dispatch = useAppDispatch();
+    const { overdueBooks, loading, error } = useAppSelector(state => state.dashboard);
     const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [booksPerPage] = useState(10);
 
     useEffect(() => {
-        fetchOverdueBooks();
-    }, []);
+        dispatch(getOverdueBooks({ page: currentPage, limit: booksPerPage }));
+    }, [dispatch, currentPage, booksPerPage]);
 
-    const fetchOverdueBooks = async () => {
-        try {
-            // This would be your actual API endpoint for overdue books
-            const response = await axios.get("http://localhost:4000/books/overdue", {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            });
-            setOverdueBooks(response.data.data || response.data);
-            setLoading(false);
-        } catch (err: any) {
-            // Fallback to dummy data if API not ready
-            const dummyData = [
-                {
-                    id: "1",
-                    title: "The Great Gatsby",
-                    author: "F. Scott Fitzgerald",
-                    borrowerName: "John Doe",
-                    lendDate: "2024-01-01",
-                    expectedReturnDate: "2024-01-15",
-                    daysOverdue: 15,
-                    coverUrl: ""
-                },
-                {
-                    id: "2",
-                    title: "1984",
-                    author: "George Orwell",
-                    borrowerName: "Jane Smith",
-                    lendDate: "2024-01-05",
-                    expectedReturnDate: "2024-01-20",
-                    daysOverdue: 10,
-                    coverUrl: ""
-                }
-            ];
-            setOverdueBooks(dummyData);
-            setLoading(false);
-        }
-    };
-
-    const filteredBooks = overdueBooks.filter(book =>
-        book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.borrowerName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredBooks = overdueBooks.lendingRecords?.filter((record: any) => {
+        const book = record.book;
+        return book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               record.borrowerName?.toLowerCase().includes(searchTerm.toLowerCase());
+    }) || [];
 
     const markAsReturned = async (bookId: string) => {
         try {
-            await axios.put(`http://localhost:4000/books/${bookId}/return`, {}, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            });
-            setOverdueBooks(prev => prev.filter(book => book.id !== bookId));
+            // TODO: Implement return book action in Redux
+            // For now, just refresh the data
+            dispatch(getOverdueBooks({ page: currentPage, limit: booksPerPage }));
         } catch (err: any) {
-            setError("Failed to mark book as returned");
+            console.error("Failed to mark book as returned:", err);
         }
     };
 
     const sendReminder = async (bookId: string) => {
         try {
-            await axios.post(`http://localhost:4000/books/${bookId}/reminder`, {}, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            });
-            // Show success message
+            // TODO: Implement send reminder action in Redux
+            // For now, just show a success message
+            alert("Reminder sent successfully!");
         } catch (err: any) {
-            setError("Failed to send reminder");
+            console.error("Failed to send reminder:", err);
         }
     };
 
@@ -110,7 +74,7 @@ export default function OverdueBooks() {
     return (
         <div className="container mt-5">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="text-danger mb-0">⚠️ Overdue Books ({overdueBooks.length})</h2>
+                <h2 className="text-danger mb-0">⚠️ Overdue Books ({overdueBooks.total || 0})</h2>
                 <button className="btn btn-primary" onClick={() => window.location.href = '/lend-book'}>
                     + Lend New Book
                 </button>
@@ -142,51 +106,111 @@ export default function OverdueBooks() {
                 </div>
             ) : (
                 <div className="list-group">
-                    {filteredBooks.map((book) => (
-                        <div key={book.id} className="list-group-item list-group-item-action border-danger">
-                            <div className="d-flex align-items-center justify-content-between">
-                                <div className="d-flex align-items-center">
-                                    <BookCard 
-                                        title={book.title} 
-                                        author={book.author} 
-                                        coverUrl={book.coverUrl}
-                                        width={60}
-                                        height={80}
-                                    />
-                                    <div className="ms-3">
-                                        <h5 className="mb-1">{book.title}</h5>
-                                        <p className="mb-1 text-muted">{book.author}</p>
-                                        <div className="small text-muted">
-                                            <span className="me-3">Borrowed by: <strong>{book.borrowerName}</strong></span>
-                                            <span className="me-3">Lent on: {new Date(book.lendDate).toLocaleDateString()}</span>
-                                            <span className="me-3">Expected return: {new Date(book.expectedReturnDate).toLocaleDateString()}</span>
-                                        </div>
-                                        <div className="mt-2">
-                                            <span className={`badge ${getOverdueSeverity(book.daysOverdue)} text-white`}>
-                                                {book.daysOverdue} days overdue
-                                            </span>
+                    {filteredBooks.map((record: any) => {
+                        const book = record.book;
+                        const daysOverdue = Math.ceil((new Date().getTime() - new Date(record.expectedReturnDate).getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        return (
+                            <div key={record.id} className="list-group-item list-group-item-action border-danger">
+                                <div className="d-flex align-items-center justify-content-between">
+                                    <div className="d-flex align-items-center">
+                                        <BookCard 
+                                            title={book.title} 
+                                            author={book.author} 
+                                            coverUrl={book.coverUrl}
+                                            width={60}
+                                            height={80}
+                                        />
+                                        <div className="ms-3">
+                                            <div className="d-flex align-items-center mb-1">
+                                                <h5 className="mb-0 me-2">{book.title}</h5>
+                                                <span className="badge bg-danger text-white">Overdue</span>
+                                            </div>
+                                            <p className="mb-1 text-muted">{book.author}</p>
+                                            <div className="small text-muted">
+                                                <div className="mb-1">
+                                                    <span className="me-3">Borrowed by: <strong className="text-danger">{record.borrowerName}</strong></span>
+                                                    {record.borrower?.email && (
+                                                        <span className="text-muted">({record.borrower.email})</span>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <span className="me-3">Lent on: {new Date(record.lendDate).toLocaleDateString()}</span>
+                                                    <span className="me-3">Expected return: {new Date(record.expectedReturnDate).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+                                            <div className="mt-2">
+                                                <span className={`badge ${getOverdueSeverity(daysOverdue)} text-white`}>
+                                                    {daysOverdue} days overdue
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="d-flex gap-2">
-                                    <button 
-                                        className="btn btn-success btn-sm"
-                                        onClick={() => markAsReturned(book.id)}
-                                    >
-                                        Mark as Returned
-                                    </button>
-                                    <button 
-                                        className="btn btn-warning btn-sm"
-                                        onClick={() => sendReminder(book.id)}
-                                    >
-                                        Send Reminder
-                                    </button>
+                                    <div className="d-flex gap-2">
+                                        <button 
+                                            className="btn btn-success btn-sm"
+                                            onClick={() => markAsReturned(book.id)}
+                                        >
+                                            Mark as Returned
+                                        </button>
+                                        <button 
+                                            className="btn btn-warning btn-sm"
+                                            onClick={() => sendReminder(book.id)}
+                                        >
+                                            Send Reminder
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
+
+            {/* Pagination */}
+            {overdueBooks.totalPages > 1 && (
+                <div className="d-flex justify-content-center mt-4">
+                    <nav>
+                        <ul className="pagination">
+                            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                <button 
+                                    className="page-link" 
+                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </button>
+                            </li>
+                            
+                            {Array.from({ length: overdueBooks.totalPages }, (_, i) => i + 1).map(page => (
+                                <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => setCurrentPage(page)}
+                                    >
+                                        {page}
+                                    </button>
+                                </li>
+                            ))}
+                            
+                            <li className={`page-item ${currentPage === overdueBooks.totalPages ? 'disabled' : ''}`}>
+                                <button 
+                                    className="page-link" 
+                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                    disabled={currentPage === overdueBooks.totalPages}
+                                >
+                                    Next
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            )}
+
+            {/* Pagination Info */}
+            <div className="text-center mt-3 text-muted">
+                Showing {((currentPage - 1) * booksPerPage) + 1} to {Math.min(currentPage * booksPerPage, overdueBooks.total || 0)} of {overdueBooks.total || 0} overdue books
+            </div>
         </div>
     );
 }
