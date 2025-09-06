@@ -67,6 +67,7 @@ export class DashboardService {
     // Transform the data to include borrower information
     const books = lendingRecords.map(record => ({
       id: record.book.id,
+      lendingId: record.id, // Include lending record ID for return functionality
       title: record.book.title,
       author: record.book.author,
       genre: record.book.genre,

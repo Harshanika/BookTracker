@@ -71,7 +71,7 @@ export class LendingService {
     });
   }
 
-  async markReturned(recordId: number) {
+  async markReturned(recordId: number, actualReturnDate?: Date, returnNote?: string) {
     const record = await this.lendingRepository.findOne({
       where: { 
         id: recordId,
@@ -80,7 +80,8 @@ export class LendingService {
     });
     if (!record) throw new NotFoundException('Lending record not found or you do not own this book');
 
-    record.actualReturnDate = new Date();
+    record.actualReturnDate = actualReturnDate || new Date();
+    record.returnNote = returnNote;
 
     // mark book back as available
     record.book.status = 'available';

@@ -27,11 +27,18 @@ export class LendingController {
   //   return this.lendingService.getUserLendingHistory();
   // }
 
-  // @UseGuards(AuthGuard)
-  // @Patch(':id/return')
-  // async markReturned(@Param('id') id: string) {
-  //   return this.lendingService.markReturned(+id);
-  // }
+  @UseGuards(AuthGuard)
+  @Patch(':id/return')
+  async markReturned(
+    @Param('id') id: string,
+    @Body() returnData: { actualReturnDate?: string; returnNote?: string }
+  ) {
+    return this.lendingService.markReturned(
+      +id,
+      returnData.actualReturnDate ? new Date(returnData.actualReturnDate) : undefined,
+      returnData.returnNote
+    );
+  }
 
   // @UseGuards(AuthGuard)
   // @Get('active')

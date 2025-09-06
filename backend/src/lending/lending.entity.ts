@@ -24,4 +24,7 @@ export class LendingRecord {
 
   @Column({ nullable: true })
   actualReturnDate?: Date;
+
+  @Column({ nullable: true })
+  returnNote?: string;
 }
