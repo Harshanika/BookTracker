@@ -2,13 +2,18 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiRequest } from '../../services/api';
 
 interface LendingRecord {
-  id: string;
-  bookId: string;
-  bookTitle: string;
-  borrowerName: string;
+  id: number;
+  bookId: number;
+  book: {
+    id: number;
+    title: string;
+    author: string;
+    genre?: string;
+  };
+  borrowerName?: string;
   lendDate: string;
   expectedReturnDate?: string;
-  returnDate?: string;
+  actualReturnDate?: string;
   status: 'lent' | 'returned' | 'overdue';
 }
 
@@ -30,7 +35,7 @@ export const fetchLendingHistory = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       // ✅ apiRequest automatically includes the token
-      const data = await apiRequest('http://localhost:4000/api/lending/history');
+      const data = await apiRequest('/lending/history');
       return data;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Network error');
@@ -43,7 +48,7 @@ export const lendBook = createAsyncThunk(
   async (lendingData: { bookId: string; borrowerName: string; expectedReturnDate?: string }, { rejectWithValue }) => {
     try {
       // ✅ apiRequest automatically includes the token
-      const data = await apiRequest('http://localhost:4000/api/books/lend', {
+      const data = await apiRequest('/books/lend', {
         method: 'POST',
         body: JSON.stringify(lendingData),
       });
@@ -60,13 +65,25 @@ export const returnBook = createAsyncThunk(
   async (lendingId: string, { rejectWithValue }) => {
     try {
       // ✅ apiRequest automatically includes the token
-      await apiRequest(`http://localhost:4000/api/lending/${lendingId}/return`, {
+      await apiRequest(`/lending/${lendingId}/return`, {
         method: 'PUT',
       });
       
       return lendingId;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to return book');
+    }
+  }
+);
+
+export const fetchActiveBorrowings = createAsyncThunk(
+  'lending/fetchActiveBorrowings',
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await apiRequest('/lending/active');
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to fetch active borrowings');
     }
   }
 );
@@ -108,11 +125,24 @@ const lendingSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(returnBook.fulfilled, (state, action) => {
-        const record = state.lendingRecords.find(r => r.id === action.payload);
-        if (record) {
-          record.status = 'returned';
-          record.returnDate = new Date().toISOString();
-        }
+        // const record = state.lendingRecords.find(r => r.id === action.payload);
+        // if (record) {
+        //   record.status = 'returned';
+        //   record.actualReturnDate = new Date().toISOString();
+        // }
+      })
+      .addCase(fetchActiveBorrowings.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchActiveBorrowings.fulfilled, (state, action) => {
+        state.loading = false;
+        state.lendingRecords = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchActiveBorrowings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

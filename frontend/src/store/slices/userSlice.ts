@@ -20,14 +20,15 @@ const initialState: UserState = {
   error: null,
 };
 
-export const fetchUserProfile = createAsyncThunk(
-  'user/fetchProfile',
+// Fetch all users
+export const fetchAllUsers = createAsyncThunk(
+  'user/fetchAllUsers',
   async (_, { rejectWithValue }) => {
     try {
-      const data = await apiRequest('/auth/me');
+      const data = await apiRequest('/users');
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch profile');
+      return rejectWithValue(error.message || 'Failed to fetch users');
     }
   }
 );
@@ -48,19 +49,20 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchUserProfile.pending, (state) => {
+      // Fetch all users
+      .addCase(fetchAllUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+      .addCase(fetchAllUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
         state.error = null;
+        state.user = action.payload;
       })
-      .addCase(fetchUserProfile.rejected, (state, action) => {
+      .addCase(fetchAllUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
+      })
   },
 });
 

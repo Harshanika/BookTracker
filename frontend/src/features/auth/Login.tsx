@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { loginUser, fetchUserProfile, clearError } from "../../store/slices/authSlice";
+import { loginUser, clearError } from "../../store/slices/authSlice";
 import AuthLayout from "../../components/AuthLayout";
 
 export default function Login() {

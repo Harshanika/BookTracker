@@ -96,6 +96,23 @@ export const fetchAllBooks = createAsyncThunk(
   }
 );
 
+export const fetchUserAvailableBooks = createAsyncThunk(
+  'books/fetchUserAvailableBooks',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiRequest('/api/books/my-available-books', {
+        method: 'GET',
+      });
+      
+      console.log('✅ User available books fetched:', response);
+      return response;
+    } catch (error: any) {
+      console.error('❌ Failed to fetch user available books:', error);
+      return rejectWithValue(error.message || 'Failed to fetch user available books');
+    }
+  }
+);
+
 const booksSlice = createSlice({
   name: 'books',
   initialState,
@@ -159,6 +176,22 @@ const booksSlice = createSlice({
       .addCase(fetchAllBooks.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string || 'Failed to fetch all books';
+      });
+
+    // Fetch User Available Books
+    builder
+      .addCase(fetchUserAvailableBooks.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserAvailableBooks.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.userBooks = action.payload || [];
+      })
+      .addCase(fetchUserAvailableBooks.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string || 'Failed to fetch user available books';
       });
   },
 });

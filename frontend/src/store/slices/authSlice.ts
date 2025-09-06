@@ -2,12 +2,6 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiRequest } from '../../services/api';
 import { setSecureToken, getSecureToken } from '../../services/api';
 
-interface User {
-  id: number;
-  email: string;
-  fullname: string;
-}
-
 interface LoginResponse {
   message: string;
   access_token: string;
@@ -18,6 +12,12 @@ interface LoginResponse {
   };
 }
 
+interface UserProfile {
+  id: number;
+  email: string;
+  fullname: string;
+}
+
 interface RegisterResponse {
   message: string;
   fullname: string;
@@ -26,7 +26,7 @@ interface RegisterResponse {
 }
 
 interface AuthState {
-  user: User | null;
+  user: UserProfile | null;
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
