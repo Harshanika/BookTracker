@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import { fetchUserAvailableBooks, fetchUserBooks } from "../../store/slices/bookSlice";
 import { lendBook, clearError } from "../../store/slices/lendingSlice";
-import { fetchAllUsers, clearUsersError } from "../../store/slices/userSlice";
+import { fetchAllUsers, clearUsers } from "../../store/slices/userSlice";
 
 export default function LendBook() {
     const navigate = useNavigate();
@@ -12,7 +12,7 @@ export default function LendBook() {
     // Redux state
     const { userBooks, loading: booksLoading } = useAppSelector(state => state.book);
     const { loading: lendingLoading, error: lendingError } = useAppSelector(state => state.lending);
-    const { users, usersLoading, usersError } = useAppSelector(state => state.user);
+    const { users, usersLoading, error: usersError } = useAppSelector(state => state.user);
     
     // Local state
     const [bookId, setBookId] = useState("");
@@ -32,7 +32,7 @@ export default function LendBook() {
     // Clear errors when component mounts
     useEffect(() => {
         dispatch(clearError());
-        dispatch(clearUsersError());
+        dispatch(clearUsers());
     }, [dispatch]);
 
     // Set default lend date to today
@@ -61,7 +61,7 @@ export default function LendBook() {
             let finalBorrowerName = '';
             if (borrowerType === 'user') {
                 const selectedUser = users.find(user => user.id.toString() === selectedUserId);
-                finalBorrowerName = selectedUser ? selectedUser.fullname : '';
+                finalBorrowerName = selectedUser ? selectedUser.name : '';
             } else {
                 finalBorrowerName = borrowerName;
             }
@@ -180,7 +180,7 @@ export default function LendBook() {
                                     <option value="">-- Select a User --</option>
                                     {users.map((user: any) => (
                                         <option key={user.id} value={user.id}>
-                                            {user.fullname} ({user.email})
+                                            {user.name} ({user.email})
                                         </option>
                                     ))}
                                 </select>

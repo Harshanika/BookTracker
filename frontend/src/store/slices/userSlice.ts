@@ -9,14 +9,14 @@ interface User {
 }
 
 interface UserState {
-  user: User | null;
-  loading: boolean;
+  users: User[];
+  usersLoading: boolean;
   error: string | null;
 }
 
 const initialState: UserState = {
-  user: null,
-  loading: false,
+  users: [],
+  usersLoading: false,
   error: null,
 };
 
@@ -37,34 +37,32 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    clearUser: (state) => {
-      state.user = null;
+    clearUsers: (state) => {
+      state.users = [];
       state.error = null;
     },
-    updateUser: (state, action: PayloadAction<Partial<User>>) => {
-      if (state.user) {
-        state.user = { ...state.user, ...action.payload };
-      }
+    updateUsers: (state, action: PayloadAction<Partial<User>>) => {
+      state.users = [...state.users, action.payload as User];
     },
   },
   extraReducers: (builder) => {
     builder
       // Fetch all users
       .addCase(fetchAllUsers.pending, (state) => {
-        state.loading = true;
+        state.usersLoading = true;
         state.error = null;
       })
       .addCase(fetchAllUsers.fulfilled, (state, action) => {
-        state.loading = false;
+        state.usersLoading = false;
         state.error = null;
-        state.user = action.payload;
+        state.users = action.payload;
       })
       .addCase(fetchAllUsers.rejected, (state, action) => {
-        state.loading = false;
+        state.usersLoading = false;
         state.error = action.payload as string;
       })
   },
 });
 
-export const { clearUser, updateUser } = userSlice.actions;
+export const { clearUsers, updateUsers } = userSlice.actions;
 export default userSlice.reducer;
