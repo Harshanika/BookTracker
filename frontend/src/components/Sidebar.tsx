@@ -1,9 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
+import { fetchDashboardData } from "../store/slices/dashboardSlice";
 
 export default function Sidebar() {
     const navigate = useNavigate();
     const location = useLocation();
+    const dispatch = useAppDispatch();
+    
+    // Get dashboard stats from Redux
+    const { stats, loading, error } = useAppSelector(state => state.dashboard);
+
+    // Fetch dashboard stats when component mounts
+    useEffect(() => {
+        dispatch(fetchDashboardData());
+    }, [dispatch]);
 
     const menuItems = [
         { label: "Dashboard", path: "/dashboard", icon: "📊" },
@@ -37,20 +48,35 @@ export default function Sidebar() {
             {/* Quick Stats Section */}
             <div className="mt-8 pt-6 border-t border-secondary-200">
                 <h4 className="text-label text-gray-600 mb-3">Quick Stats</h4>
-                <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Total Books:</span>
-                        <span className="font-medium text-gray-900">42</span>
+                {loading ? (
+                    <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-gray-600">Loading...</span>
+                            <div className="animate-pulse bg-gray-200 h-4 w-8 rounded"></div>
+                        </div>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Borrowed:</span>
-                        <span className="font-medium text-gray-900">7</span>
+                ) : error ? (
+                    <div className="text-sm text-error-600">
+                        Failed to load stats
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-600">Overdue:</span>
-                        <span className="font-medium text-warning-600">3</span>
+                ) : (
+                    <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-gray-600">Total Books:</span>
+                            <span className="font-medium text-gray-900">{stats.totalBooks}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-600">Borrowed:</span>
+                            <span className="font-medium text-gray-900">{stats.borrowedBooks}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-600">Overdue:</span>
+                            <span className={`font-medium ${stats.overdueBooks > 0 ? 'text-warning-600' : 'text-gray-900'}`}>
+                                {stats.overdueBooks}
+                            </span>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );
