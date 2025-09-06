@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
+import { getUserOwnedBooks } from "../store/slices/dashboardSlice";
 // @ts-ignore
 import BookCard from "../components/BookCard";
 
@@ -13,37 +14,25 @@ interface Book {
 }
 
 export default function TotalBooks() {
-    const [books, setBooks] = useState<Book[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+    const dispatch = useAppDispatch();
+    const { ownedBooks, loading, error } = useAppSelector(state => state.dashboard);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterGenre, setFilterGenre] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [booksPerPage] = useState(12);
 
     useEffect(() => {
-        fetchBooks();
-    }, []);
+        dispatch(getUserOwnedBooks({ page: currentPage, limit: booksPerPage }));
+    }, [dispatch, currentPage, booksPerPage]);
 
-    const fetchBooks = async () => {
-        try {
-            const response = await axios.get("http://localhost:4000/books", {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            });
-            setBooks(response.data.data || response.data);
-            setLoading(false);
-        } catch (err: any) {
-            setError("Failed to load books");
-            setLoading(false);
-        }
-    };
-
-    const filteredBooks = books.filter(book => {
+    const filteredBooks = ownedBooks.books?.filter((book: any) => {
         const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             book.author.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesGenre = filterGenre === "" || book.genre === filterGenre;
         return matchesSearch && matchesGenre;
-    });
+    }) || [];
 
-    const genres = Array.from(new Set(books.map(book => book.genre)));
+    const genres = Array.from(new Set(ownedBooks.books?.map((book: any) => book.genre) || []));
 
     if (loading) {
         return (
@@ -69,7 +58,7 @@ export default function TotalBooks() {
     return (
         <div className="container mt-5">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="text-primary mb-0">📚 Total Books ({books.length})</h2>
+                <h2 className="text-primary mb-0">📚 Total Books ({ownedBooks.total || 0})</h2>
                 <button className="btn btn-primary" onClick={() => window.location.href = '/add-book'}>
                     + Add New Book
                 </button>
@@ -97,9 +86,9 @@ export default function TotalBooks() {
                                 onChange={(e) => setFilterGenre(e.target.value)}
                             >
                                 <option value="">All Genres</option>
-                                {genres.map(genre => (
-                                    <option key={genre} value={genre}>{genre}</option>
-                                ))}
+                            {genres.map((genre: any) => (
+                                <option key={genre} value={genre}>{genre}</option>
+                            ))}
                             </select>
                         </div>
                     </div>
@@ -116,7 +105,7 @@ export default function TotalBooks() {
                 </div>
             ) : (
                 <div className="row">
-                    {filteredBooks.map((book) => (
+                    {filteredBooks.map((book: any) => (
                         <div key={book.id} className="col-md-6 col-lg-4 mb-4">
                             <div className="card shadow-sm h-100">
                                 <div className="card-body">
@@ -153,6 +142,51 @@ export default function TotalBooks() {
                     ))}
                 </div>
             )}
+
+            {/* Pagination */}
+            {ownedBooks.totalPages > 1 && (
+                <div className="d-flex justify-content-center mt-4">
+                    <nav>
+                        <ul className="pagination">
+                            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                <button 
+                                    className="page-link" 
+                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </button>
+                            </li>
+                            
+                            {Array.from({ length: ownedBooks.totalPages }, (_, i) => i + 1).map(page => (
+                                <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => setCurrentPage(page)}
+                                    >
+                                        {page}
+                                    </button>
+                                </li>
+                            ))}
+                            
+                            <li className={`page-item ${currentPage === ownedBooks.totalPages ? 'disabled' : ''}`}>
+                                <button 
+                                    className="page-link" 
+                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                    disabled={currentPage === ownedBooks.totalPages}
+                                >
+                                    Next
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            )}
+
+            {/* Pagination Info */}
+            <div className="text-center mt-3 text-muted">
+                Showing {((currentPage - 1) * booksPerPage) + 1} to {Math.min(currentPage * booksPerPage, ownedBooks.total || 0)} of {ownedBooks.total || 0} books
+            </div>
         </div>
     );
 }
