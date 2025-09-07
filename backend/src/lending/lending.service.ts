@@ -18,9 +18,15 @@ export class LendingService {
 ) {}
 
 
-  async lendBook(bookId: number, borrowerName?: string, borrowerId?: number, lendDate?: Date, expectedReturnDate?: Date) {
-    const book = await this.bookRepository.findOne({ where: { id: bookId } });
-    if (!book) throw new NotFoundException('Book not found');
+  async lendBook(bookId: number, userId: number, borrowerName?: string, borrowerId?: number, lendDate?: Date, expectedReturnDate?: Date) {
+    const book = await this.bookRepository.findOne({ 
+      where: { 
+        id: bookId,
+        owner: { id: userId }
+      },
+      relations: ['owner']
+    });
+    if (!book) throw new NotFoundException('Book not found or you do not own this book');
 
     // mark book as borrowed
     book.status = 'borrowed';
@@ -64,17 +70,21 @@ export class LendingService {
     });
   }
 
-  async getUserLendingHistory() {
+  async getUserLendingHistory(userId: number) {
     return this.lendingRepository.find({
+      where: { 
+        book: { owner: { id: userId } }
+      },
       relations: ['book', 'book.owner'],
       order: { lendDate: 'DESC' },
     });
   }
 
-  async markReturned(recordId: number, actualReturnDate?: Date, returnNote?: string) {
+  async markReturned(recordId: number, userId: number, actualReturnDate?: Date, returnNote?: string) {
     const record = await this.lendingRepository.findOne({
       where: { 
         id: recordId,
+        book: { owner: { id: userId } }
       },
       relations: ['book'],
     });
