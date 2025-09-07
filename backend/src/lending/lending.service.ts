@@ -71,12 +71,75 @@ export class LendingService {
   }
 
   async getUserLendingHistory(userId: number) {
-    return this.lendingRepository.find({
+    const lendingRecords = await this.lendingRepository.find({
       where: { 
         book: { owner: { id: userId } }
       },
-      relations: ['book', 'book.owner'],
+      relations: ['book', 'book.owner', 'borrower'],
       order: { lendDate: 'DESC' },
+    });
+
+    // Group records by book
+    const groupedByBook = lendingRecords.reduce((acc, record) => {
+      const bookId = record.book.id;
+      
+      if (!acc[bookId]) {
+        acc[bookId] = {
+          book: record.book,
+          lendingHistory: []
+        };
+      }
+      
+      // Determine return status based on actual vs expected return date
+      let returnStatus = 'lent';
+      if (record.actualReturnDate) {
+        if (record.expectedReturnDate) {
+          const actualDate = new Date(record.actualReturnDate);
+          const expectedDate = new Date(record.expectedReturnDate);
+          const diffDays = Math.ceil((actualDate.getTime() - expectedDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (diffDays <= 0) {
+            returnStatus = diffDays === 0 ? 'returned_on_time' : 'returned_early';
+          } else {
+            returnStatus = 'returned_late';
+          }
+        } else {
+          returnStatus = 'returned';
+        }
+      }
+
+      acc[bookId].lendingHistory.push({
+        id: record.id,
+        borrowerName: record.borrowerName,
+        borrower: record.borrower,
+        lendDate: record.lendDate,
+        expectedReturnDate: record.expectedReturnDate,
+        actualReturnDate: record.actualReturnDate,
+        returnNote: record.returnNote,
+        status: returnStatus
+      });
+      
+      return acc;
+    }, {} as any);
+
+    // Convert to array and sort lending history within each book
+    return Object.values(groupedByBook).map((group: any) => {
+      // Sort lending history chronologically (oldest first)
+      const sortedHistory = group.lendingHistory.sort((a: any, b: any) => 
+        new Date(a.lendDate).getTime() - new Date(b.lendDate).getTime()
+      );
+      
+      // Find the most recent lending record to determine current status
+      const mostRecentRecord = group.lendingHistory.reduce((latest: any, current: any) => {
+        return new Date(current.lendDate) > new Date(latest.lendDate) ? current : latest;
+      });
+      
+      return {
+        book: group.book,
+        lendingHistory: sortedHistory,
+        totalLendings: group.lendingHistory.length,
+        currentStatus: mostRecentRecord?.status || 'available'
+      };
     });
   }
 
