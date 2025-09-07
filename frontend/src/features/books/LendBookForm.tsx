@@ -4,6 +4,10 @@ import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import { fetchUserAvailableBooks, fetchUserBooks } from "../../store/slices/bookSlice";
 import { lendBook, clearError } from "../../store/slices/lendingSlice";
 import { fetchAllUsers, clearUsers } from "../../store/slices/userSlice";
+import { useFormValidation } from "../../hooks/useFormValidation";
+import { lendBookSchema, LendBookFormData } from "../../schemas/validationSchemas";
+import { SelectField, TextField, DateField } from "../../components/FormField";
+import { FormFieldSkeleton, LoadingSpinner } from "../../components/SkeletonLoader";
 
 export default function LendBook() {
     const navigate = useNavigate();

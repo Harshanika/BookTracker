@@ -3,6 +3,7 @@ import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import { fetchLendingHistory, returnBook, clearError } from "../../store/slices/lendingSlice";
 import BookCard from "../../components/BookCard";
 import ReturnBookModal from "../../components/ReturnBookModal";
+import { ListItemSkeleton, LoadingSpinner } from "../../components/SkeletonLoader";
 
 export default function LentBooks() {
     const dispatch = useAppDispatch();
@@ -125,10 +126,18 @@ export default function LentBooks() {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-64">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading lending history...</p>
+            <div className="container mt-5">
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h2 className="text-primary mb-0">📚 Lending History</h2>
+                    <button className="btn btn-primary" disabled>
+                        + Lend New Book
+                    </button>
+                </div>
+                
+                <div className="list-group">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <ListItemSkeleton key={index} />
+                    ))}
                 </div>
             </div>
         );

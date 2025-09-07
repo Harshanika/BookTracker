@@ -1,17 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { loginUser, clearError } from "../../store/slices/authSlice";
 import AuthLayout from "../../components/AuthLayout";
+import { useFormValidation } from "../../hooks/useFormValidation";
+import { loginSchema, LoginFormData } from "../../schemas/validationSchemas";
+import { EmailField, PasswordField } from "../../components/FormField";
+import { LoadingSpinner } from "../../components/SkeletonLoader";
 
 export default function Login() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     
     const { loading, error, isAuthenticated, user } = useAppSelector(state => state.auth);
+    
+    const form = useFormValidation<LoginFormData>({
+        schema: loginSchema,
+        defaultValues: {
+            email: '',
+            password: '',
+        },
+        mode: 'onChange'
+    });
 
     // Clear any previous errors when component mounts
     useEffect(() => {
@@ -26,16 +36,13 @@ export default function Login() {
         }
     }, [isAuthenticated, user, navigate]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (!email || !password) {
-            return;
-        }
-
+    const handleSubmit = async (data: LoginFormData) => {
         try {
             // Step 1: Login to get token
-            const loginResult = await dispatch(loginUser({ email, password })).unwrap();
+            const loginResult = await dispatch(loginUser({ 
+                email: data.email, 
+                password: data.password 
+            })).unwrap();
             
             // if (loginResult.token) {
             //     // Step 2: Fetch complete user profile with the token
@@ -67,38 +74,28 @@ export default function Login() {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-3">
-                            <label className="form-label">Email Address</label>
-                            <input
-                                type="email"
-                                className="form-control"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                placeholder="Enter your email"
-                                autoComplete="email"
-                            />
-                        </div>
+                    <form onSubmit={form.handleSubmit(handleSubmit)}>
+                        <EmailField
+                            form={form}
+                            name="email"
+                            label="Email Address"
+                            placeholder="Enter your email"
+                            required
+                        />
 
-                        <div className="mb-4">
-                            <label className="form-label">Password</label>
-                            <input
-                                type="password"
-                                className="form-control"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                placeholder="Enter your password"
-                                autoComplete="current-password"
-                            />
-                        </div>
+                        <PasswordField
+                            form={form}
+                            name="password"
+                            label="Password"
+                            placeholder="Enter your password"
+                            required
+                        />
 
                         {/* ✅ Use Redux loading state */}
                         <button 
                             type="submit" 
                             className="btn btn-primary w-100"
-                            disabled={loading}
+                            disabled={loading || !form.formState.isValid}
                         >
                             {loading ? (
                                 <>

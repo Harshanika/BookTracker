@@ -1,18 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { registerUser, clearError } from "../../store/slices/authSlice";
 import AuthLayout from "../../components/AuthLayout";
+import { useFormValidation } from "../../hooks/useFormValidation";
+import { registerSchema, RegisterFormData } from "../../schemas/validationSchemas";
+import { TextField, EmailField, PasswordField } from "../../components/FormField";
 
 export default function Register() {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [passwordError, setPasswordError] = useState(""); // ✅ Add missing state
-
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    
+    const form = useFormValidation<RegisterFormData>({
+        schema: registerSchema,
+        defaultValues: {
+            fullname: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+        },
+        mode: 'onChange'
+    });
 
     // Clear any previous errors when component mounts
     useEffect(() => {
@@ -28,33 +36,17 @@ export default function Register() {
         }
     }, [isAuthenticated, user, navigate]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        // ✅ Clear previous password error
-        setPasswordError("");
-
-        // ✅ Validate password confirmation
-        if (password !== confirmPassword) {
-            setPasswordError("Passwords do not match");
-            return;
-        }
-
-        // ✅ Validate password length
-        if (password.length < 6) {
-            setPasswordError("Password must be at least 6 characters long");
-            return;
-        }
-
+    const handleSubmit = async (data: RegisterFormData) => {
         try {
             // ✅ This now handles: register → login → fetch profile
-            await dispatch(registerUser({ fullname: name, email, password })).unwrap();
+            await dispatch(registerUser({ 
+                fullname: data.fullname, 
+                email: data.email, 
+                password: data.password 
+            })).unwrap();
             
             // ✅ Clear form on success
-            setName("");
-            setEmail("");
-            setPassword("");
-            setConfirmPassword("");
+            form.reset();
             
             // ✅ User is now authenticated, navigate to dashboard
             navigate('/dashboard');
@@ -84,69 +76,44 @@ export default function Register() {
                         </div>
                     )}
 
-                    {/* ✅ Display password validation error */}
-                    {passwordError && (
-                        <div className="alert alert-warning">
-                            {passwordError}
-                        </div>
-                    )}
+                    <form onSubmit={form.handleSubmit(handleSubmit)}>
+                        <TextField
+                            form={form}
+                            name="fullname"
+                            label="Full Name"
+                            placeholder="Enter your full name"
+                            required
+                        />
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-3">
-                            <label className="form-label">Full Name</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                                placeholder="Enter your full name"
-                            />
-                        </div>
+                        <EmailField
+                            form={form}
+                            name="email"
+                            label="Email Address"
+                            placeholder="Enter your email"
+                            required
+                        />
 
-                        <div className="mb-3">
-                            <label className="form-label">Email Address</label>
-                            <input
-                                type="email"
-                                className="form-control"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                placeholder="Enter your email"
-                            />
-                        </div>
+                        <PasswordField
+                            form={form}
+                            name="password"
+                            label="Password"
+                            placeholder="Enter your password"
+                            required
+                        />
 
-                        <div className="mb-3">
-                            <label className="form-label">Password</label>
-                            <input
-                                type="password"
-                                className="form-control"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                placeholder="Enter your password"
-                                minLength={6}
-                            />
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="form-label">Confirm Password</label>
-                            <input
-                                type="password"
-                                className="form-control"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                placeholder="Confirm your password"
-                                minLength={6}
-                            />
-                        </div>
+                        <PasswordField
+                            form={form}
+                            name="confirmPassword"
+                            label="Confirm Password"
+                            placeholder="Confirm your password"
+                            required
+                        />
 
                         {/* ✅ Use Redux loading state */}
                         <button 
                             type="submit" 
                             className="btn btn-primary w-100"
-                            disabled={loading}
+                            disabled={loading || !form.formState.isValid}
                         >
                             {loading ? (
                                 <>

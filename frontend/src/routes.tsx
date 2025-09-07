@@ -12,6 +12,8 @@ import OverdueBooks from "./pages/OverdueBooks";
 import LandingPage from "./features/landing/LandingPage";
 import MainLayout from "./components/MainLayout";
 import ErrorBoundary from "components/ErrorBoundry";
+import ValidationTest from "./debug/ValidationTest";
+import SimpleValidationTest from "./debug/SimpleValidationTest";
 
 export default function AppRoutes() {
     return (
@@ -20,6 +22,8 @@ export default function AppRoutes() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/validation-test" element={<ValidationTest />} />
+                <Route path="/simple-validation-test" element={<SimpleValidationTest />} />
 
                 {/* Protected routes with MainLayout */}
                 <Route

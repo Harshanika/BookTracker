@@ -1,22 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { addBook, clearBooksError } from "../../store/slices/bookSlice";
+import { useFormValidation } from "../../hooks/useFormValidation";
+import { addBookSchema, AddBookFormData } from "../../schemas/validationSchemas";
+import { TextField, TextAreaField, SelectField } from "../../components/FormField";
+import { FormFieldSkeleton } from "../../components/SkeletonLoader";
 
 export default function AddBookForm() {
-    const [title, setTitle] = useState("");
-    const [author, setAuthor] = useState("");
-    const [genre, setGenre] = useState("");
-    const [status, setStatus] = useState("");
-    const [description, setDescription] = useState("");
-    const [coverUrl, setCoverUrl] = useState("");
-    
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     
     // ✅ Get Redux state
     const { addBookLoading, addBookError } = useAppSelector(state => state.book);
     const { user } = useAppSelector(state => state.auth);
+    
+    const form = useFormValidation<AddBookFormData>({
+        schema: addBookSchema,
+        defaultValues: {
+            title: '',
+            author: '',
+            genre: '',
+            isbn: '',
+            description: '',
+        },
+        mode: 'onChange'
+    });
 
     useEffect(() => {
         // ✅ Clear any previous errors
@@ -28,32 +37,21 @@ export default function AddBookForm() {
         }
     }, [dispatch, user, navigate]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (!title.trim() || !author.trim() || !genre.trim()) {
-            return;
-        }
-
+    const handleSubmit = async (data: AddBookFormData) => {
         try {
             // ✅ Dispatch Redux action to add book
             const result = await dispatch(addBook({
-                title: title.trim(),
-                author: author.trim(),
-                genre: genre.trim(),
-                status: status.trim() as 'available' | 'borrowed',
-                description: description.trim() || undefined,
-                coverUrl: coverUrl.trim() || undefined,
+                title: data.title.trim(),
+                author: data.author.trim(),
+                genre: data.genre?.trim() || '',
+                status: 'available' as 'available' | 'borrowed',
+                description: data.description?.trim() || undefined,
             })).unwrap();
 
             console.log('✅ Book added successfully:', result);
             
             // ✅ Clear form and redirect to dashboard
-            setTitle("");
-            setAuthor("");
-            setGenre("");
-            setDescription("");
-            setCoverUrl("");
+            form.reset();
             
             // ✅ Navigate to dashboard or user's books
             navigate('/dashboard');
@@ -84,115 +82,64 @@ export default function AddBookForm() {
                                 </div>
                             )}
 
-                            <form onSubmit={handleSubmit}>
-                                <div className="mb-3">
-                                    <label htmlFor="title" className="form-label">
-                                        Book Title *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        id="title"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        required
-                                        placeholder="Enter book title"
-                                    />
-                                </div>
+                            <form onSubmit={form.handleSubmit(handleSubmit)}>
+                                <TextField
+                                    form={form}
+                                    name="title"
+                                    label="Book Title"
+                                    placeholder="Enter book title"
+                                    required
+                                />
 
-                                <div className="mb-3">
-                                    <label htmlFor="author" className="form-label">
-                                        Author *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        id="author"
-                                        value={author}
-                                        onChange={(e) => setAuthor(e.target.value)}
-                                        required
-                                        placeholder="Enter author name"
-                                    />
-                                </div>
+                                <TextField
+                                    form={form}
+                                    name="author"
+                                    label="Author"
+                                    placeholder="Enter author name"
+                                    required
+                                />
 
-                                <div className="mb-3">
-                                    <label htmlFor="genre" className="form-label">
-                                        Genre *
-                                    </label>
-                                    <select
-                                        className="form-select"
-                                        id="genre"
-                                        value={genre}
-                                        onChange={(e) => setGenre(e.target.value)}
-                                        required
-                                    >
-                                        <option value="">Select a genre</option>
-                                        <option value="Fiction">Fiction</option>
-                                        <option value="Non-Fiction">Non-Fiction</option>
-                                        <option value="Mystery">Mystery</option>
-                                        <option value="Romance">Romance</option>
-                                        <option value="Science Fiction">Science Fiction</option>
-                                        <option value="Fantasy">Fantasy</option>
-                                        <option value="Biography">Biography</option>
-                                        <option value="History">History</option>
-                                        <option value="Self-Help">Self-Help</option>
-                                        <option value="Business">Business</option>
-                                        <option value="Technology">Technology</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
+                                <SelectField
+                                    form={form}
+                                    name="genre"
+                                    label="Genre"
+                                    options={[
+                                        { value: '', label: 'Select a genre' },
+                                        { value: 'Fiction', label: 'Fiction' },
+                                        { value: 'Non-Fiction', label: 'Non-Fiction' },
+                                        { value: 'Mystery', label: 'Mystery' },
+                                        { value: 'Romance', label: 'Romance' },
+                                        { value: 'Science Fiction', label: 'Science Fiction' },
+                                        { value: 'Fantasy', label: 'Fantasy' },
+                                        { value: 'Biography', label: 'Biography' },
+                                        { value: 'History', label: 'History' },
+                                        { value: 'Self-Help', label: 'Self-Help' },
+                                        { value: 'Business', label: 'Business' },
+                                        { value: 'Technology', label: 'Technology' },
+                                        { value: 'Other', label: 'Other' },
+                                    ]}
+                                />
 
-                                <div className="mb-3">
-                                    <label htmlFor="description" className="form-label">
-                                        Description
-                                    </label>
-                                    <textarea
-                                        className="form-control"
-                                        id="description"
-                                        rows={3}
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        placeholder="Enter book description (optional)"
-                                    />
-                                </div>
+                                <TextField
+                                    form={form}
+                                    name="isbn"
+                                    label="ISBN"
+                                    placeholder="Enter ISBN (optional)"
+                                />
 
-                                <div className="mb-3">
-                                    <label htmlFor="coverUrl" className="form-label">
-                                        Cover Image URL
-                                    </label>
-                                    <input
-                                        type="url"
-                                        className="form-control"
-                                        id="coverUrl"
-                                        value={coverUrl}
-                                        onChange={(e) => setCoverUrl(e.target.value)}
-                                        placeholder="Enter cover image URL (optional)"
-                                    />
-
-                                <div className="mb-3">
-                                    <label htmlFor="status" className="form-label">
-                                        Status *
-                                    </label>
-                                    <select
-                                        className="form-select"
-                                        id="status"
-                                        value={status}
-                                        onChange={(e) => setStatus(e.target.value)}
-                                        required
-                                    >
-                                        <option value="">Select a status</option>
-                                        <option value="available">Available</option>
-                                        <option value="borrowed">Borrowed</option>
-                                
-                                    </select>
-                                </div>
-                                </div>
+                                <TextAreaField
+                                    form={form}
+                                    name="description"
+                                    label="Description"
+                                    placeholder="Enter book description (optional)"
+                                    rows={3}
+                                />
 
                                 <div className="d-flex gap-2">
                                     <button
                                         type="submit"
                                         className="btn btn-primary"
-                                        disabled={addBookLoading}
+                                        disabled={addBookLoading || !form.formState.isValid}
                                     >
                                         {addBookLoading ? (
                                             <>
