@@ -187,13 +187,13 @@ export default function LentBooks() {
                                     
                                     {(record.status === 'lent' || !record.status) && (
                                         <div className="d-flex gap-2">
-                                            <button 
+                                            {/* <button 
                                                 className="btn btn-success btn-sm"
                                                 onClick={() => handleReturnClick(record)}
                                                 disabled={returningId === record.id}
                                             >
                                                 {returningId === record.id ? "Returning..." : "Mark as Returned"}
-                                            </button>
+                                            </button> */}
                                         </div>
                                     )}
                                 </div>
