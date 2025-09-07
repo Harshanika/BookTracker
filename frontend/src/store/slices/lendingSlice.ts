@@ -19,7 +19,7 @@ interface LendingRecord {
 }
 
 interface LendingState {
-  lendingRecords: LendingRecord[];
+  lendingRecords: any[]; // Changed to any[] to handle grouped data structure
   loading: boolean;
   error: string | null;
 }

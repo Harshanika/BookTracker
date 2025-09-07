@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn } from 'typeorm';
 import { User } from '../users/user.entity';
 import { LendingRecord } from '../lending/lending.entity';
 
@@ -24,6 +24,9 @@ export class Book {
 
   @Column({ default: 'available' })
   status!: 'available' | 'borrowed';
+
+  @CreateDateColumn()
+  createdAt!: Date;
 
   @ManyToOne(() => User, (user) => user.id)
   owner!: User;

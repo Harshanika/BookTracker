@@ -146,7 +146,7 @@ export default function LentBooks() {
     return (
         <div className="container mt-5">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="text-primary mb-0">📚 Lending History ({lendingRecords.length})</h2>
+                <h2 className="text-primary mb-0">📚 Lending History ({lendingRecords?.length || 0})</h2>
                 <button className="btn btn-primary" onClick={() => window.location.href = '/lend-book'}>
                     + Lend New Book
                 </button>
@@ -155,7 +155,7 @@ export default function LentBooks() {
             {error && <div className="alert alert-danger mb-4">{error}</div>}
             {successMessage && <div className="alert alert-success mb-4">{successMessage}</div>}
 
-            {lendingRecords.length === 0 ? (
+            {!lendingRecords || lendingRecords.length === 0 ? (
                 <div className="text-center py-5">
                     <div className="text-muted">
                         <h4>📖 No Books Lent Yet</h4>
@@ -167,15 +167,15 @@ export default function LentBooks() {
                 </div>
             ) : (
             <div className="list-group">
-                    {lendingRecords.map((bookGroup: any) => {
+                    {(lendingRecords || []).map((bookGroup: any) => {
                         // Safety check for book group properties
                         if (!bookGroup || !bookGroup.book) {
                             return null;
                         }
                         
-                        const { book, lendingHistory, totalLendings, currentStatus } = bookGroup;
+                        const { book, lendingHistory = [], totalLendings, currentStatus } = bookGroup;
                         // Get the most recent record (last in the chronologically sorted array)
-                        const latestRecord = lendingHistory[lendingHistory.length - 1];
+                        const latestRecord = lendingHistory.length > 0 ? lendingHistory[lendingHistory.length - 1] : null;
                         // Use backend status directly - it already handles overdue logic
                         const finalStatus = currentStatus || 'available';
                         // Calculate days overdue only for display purposes
@@ -249,7 +249,7 @@ export default function LentBooks() {
                                             )}
                                             
                                             {/* Lending History */}
-                                            {lendingHistory.length > 1 && (
+                                            {lendingHistory && lendingHistory.length > 1 && (
                                                 <div className="mt-3">
                                                     <h6 className="text-muted mb-2">📚 Lending History:</h6>
                                                     <div className="small">

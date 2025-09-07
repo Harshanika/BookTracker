@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
 import DashboardCard from "../../components/DashboardCard";
+import RecentActivity from "../../components/RecentActivity";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
-import { fetchDashboardData } from "../../store/slices/dashboardSlice";
+import { fetchDashboardData, fetchRecentActivity } from "../../store/slices/dashboardSlice";
 //  import { fetchAllBooks, fetchUserBooks } from "store/slices/bookSlice";
 
 export default function Dashboard() {
@@ -14,9 +15,12 @@ export default function Dashboard() {
     // const { user } = useAppSelector(state => state.auth);
     // const { books, userBooks, loading: booksLoading, error: booksError } = useAppSelector(state => state.book);
     const { stats, loading: dashboardLoading, error: dashboardError } = useAppSelector(state => state.dashboard);
+    
     useEffect(() => {
         // ✅ Dispatch Redux action to fetch dashboard data
         dispatch(fetchDashboardData());
+        // ✅ Fetch recent activity
+        dispatch(fetchRecentActivity(10));
         // dispatch(fetchUserBooks());
         // dispatch(fetchAllBooks());
     }, [dispatch]);
@@ -75,7 +79,7 @@ export default function Dashboard() {
                         <div className="grid">
                             <DashboardCard
                                 title="Total Books"
-                                count={stats.totalBooks}
+                                count={stats?.totalBooks || 0}
                                 imageUrl="https://cdn-icons-png.flaticon.com/512/201/201818.png"
                                 bgColor="linear-gradient(135deg, #4facfe, #00f2fe)"
                                 onClick={() => navigate("/total-books-owned")}
@@ -83,7 +87,7 @@ export default function Dashboard() {
                             />
                             <DashboardCard
                                 title="Borrowed Books"
-                                count={stats.borrowedBooks}
+                                count={stats?.borrowedBooks || 0}
                                 imageUrl="https://cdn-icons-png.flaticon.com/512/1828/1828419.png"
                                 bgColor="linear-gradient(135deg, #43e97b, #38f9d7)"
                                 onClick={() => navigate("/total-books-borrowed")}
@@ -91,7 +95,7 @@ export default function Dashboard() {
                             />
                             <DashboardCard
                                 title="Overdue Books"
-                                count={stats.overdueBooks}
+                                count={stats?.overdueBooks || 0}
                                 imageUrl="https://cdn-icons-png/flaticon.com/512/2910/2910768.png"
                                 bgColor="linear-gradient(135deg, #ff758c, #ff7eb3)"
                                 onClick={() => navigate("/total-books-overdue")}
@@ -100,45 +104,12 @@ export default function Dashboard() {
                         </div>
 
                         {/* Recent Activity Section */}
-                        <div className="mt-8">
-                            <h3 className="heading-3 mb-4">Recent Activity</h3>
-                            
-                            {/* Recent Books */}
-                            <div className="row">
-                                {/* <div className="col-md-6">
-                                    <h4 className="heading-4 mb-3">Recent Books</h4>
-                                    <div className="list-group">
-                                        {stats.recentBooks.map((book) => (
-                                            <div key={book.id} className="list-group-item d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 className="mb-1">{book.title}</h6>
-                                                    <small className="text-muted">{book.author}</small>
-                                                </div>
-                                                <span className={`badge ${book.status === 'available' ? 'bg-success' : 'bg-warning'}`}>
-                                                    {book.status}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div> */}
-                                
-                                {/* Recent Lending */}
-                                <div className="col-md-6">
-                                    <h4 className="heading-4 mb-3">Recent Lending</h4>
-                                    {/* <div className="list-group">
-                                        {stats.recentLending.map((lending) => (
-                                            <div key={lending.id} className="list-group-item">
-                                                <h6 className="mb-1">{lending.bookTitle}</h6>
-                                                <small className="text-muted">
-                                                    Lent to: {lending.borrowerName}<br/>
-                                                    Date: {new Date(lending.lendDate).toLocaleDateString()}
-                                                </small>
-                                            </div>
-                                        ))}
-                                    </div> */}
-                                </div>
-                            </div>
-                        </div>
+                        <RecentActivity 
+                            recentBooks={stats?.recentBooks || []}
+                            recentLending={stats?.recentLending || []}
+                            loading={dashboardLoading}
+                            error={dashboardError}
+                        />
                     </div>
                 </div>
             </div>

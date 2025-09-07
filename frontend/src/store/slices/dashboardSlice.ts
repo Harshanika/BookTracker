@@ -11,13 +11,17 @@ interface DashboardStats {
     author: string;
     status: 'available' | 'borrowed';
     coverUrl?: string;
+    addedDate?: string;
   }>;
   recentLending: Array<{
     id: string;
     bookTitle: string;
     borrowerName: string;
+    borrower?: any;
     lendDate: string;
     expectedReturnDate?: string;
+    actualReturnDate?: string;
+    status: 'lent' | 'returned';
   }>;
 }
 
@@ -151,6 +155,19 @@ export const refreshDashboardStats = createAsyncThunk(
   }
 );
 
+// ✅ Async thunk to fetch recent activity
+export const fetchRecentActivity = createAsyncThunk(
+  'dashboard/fetchRecentActivity',
+  async (limit: number = 10, { rejectWithValue }) => {
+    try {
+      const response = await apiRequest(`/api/dashboard/recent-activity?limit=${limit}`);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to fetch recent activity');
+    }
+  }
+);
+
 const dashboardSlice = createSlice({
   name: 'dashboard',
   initialState,
@@ -202,7 +219,14 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchDashboardData.fulfilled, (state, action) => {
         state.loading = false;
-        state.stats = action.payload.data || action.payload || {};
+        const payload = action.payload.data || action.payload || {};
+        state.stats = {
+          totalBooks: payload.totalBooks || 0,
+          borrowedBooks: payload.borrowedBooks || 0,
+          overdueBooks: payload.overdueBooks || 0,
+          recentBooks: payload.recentBooks || [],
+          recentLending: payload.recentLending || [],
+        };
         state.lastUpdated = new Date().toISOString();
         state.error = null;
       })
@@ -265,6 +289,22 @@ const dashboardSlice = createSlice({
         state.error = null;
       })
       .addCase(refreshDashboardStats.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch Recent Activity
+      .addCase(fetchRecentActivity.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchRecentActivity.fulfilled, (state, action) => {
+        state.loading = false;
+        state.stats.recentBooks = action.payload.recentBooks || [];
+        state.stats.recentLending = action.payload.recentLending || [];
+        state.lastUpdated = new Date().toISOString();
+        state.error = null;
+      })
+      .addCase(fetchRecentActivity.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

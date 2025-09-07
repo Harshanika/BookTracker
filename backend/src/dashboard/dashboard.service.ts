@@ -133,4 +133,51 @@ export class DashboardService {
       lendingRecords,
     };
   }
+
+  async getRecentActivity(userId: number, limit = 10) {
+    // Get recent books added by user (last 10)
+    const recentBooks = await this.bookRepository.find({
+      where: { owner: { id: userId } },
+      relations: ['owner'],
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
+
+    // Get recent lending activity (last 10)
+    const recentLending = await this.lendingRepository
+      .createQueryBuilder('lending')
+      .leftJoinAndSelect('lending.book', 'book')
+      .leftJoinAndSelect('lending.borrower', 'borrower')
+      .where('book.owner.id = :userId', { userId })
+      .orderBy('lending.lendDate', 'DESC')
+      .take(limit)
+      .getMany();
+
+    // Transform recent books data
+    const transformedRecentBooks = recentBooks.map(book => ({
+      id: book.id.toString(),
+      title: book.title,
+      author: book.author,
+      status: book.status as 'available' | 'borrowed',
+      // coverUrl: book.coverUrl,
+      addedDate: book.createdAt,
+    }));
+
+    // Transform recent lending data
+    const transformedRecentLending = recentLending.map(lending => ({
+      id: lending.id.toString(),
+      bookTitle: lending.book.title,
+      borrowerName: lending.borrowerName,
+      borrower: lending.borrower,
+      lendDate: lending.lendDate,
+      expectedReturnDate: lending.expectedReturnDate,
+      actualReturnDate: lending.actualReturnDate,
+      status: lending.actualReturnDate ? 'returned' : 'lent',
+    }));
+
+    return {
+      recentBooks: transformedRecentBooks,
+      recentLending: transformedRecentLending,
+    };
+  }
 }

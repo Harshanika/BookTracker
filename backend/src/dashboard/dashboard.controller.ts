@@ -44,4 +44,13 @@ export class DashboardController {
     return this.dashboardService.getOverdueBooksByUser(req.user.sub, +page, +limit);
   }
 
+  @UseGuards(AuthGuard)
+  @Get('recent-activity')
+  async getRecentActivity(
+    @Req() req: AuthenticatedRequest,
+    @Query('limit') limit = '10'
+  ) {
+    return this.dashboardService.getRecentActivity(req.user.sub, +limit);
+  }
+
 }
