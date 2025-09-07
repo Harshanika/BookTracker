@@ -97,8 +97,8 @@ export function FormField<T extends FieldValues>({
   };
 
   return (
-    <div className={`mb-3 ${className}`}>
-      <label htmlFor={name} className={`form-label fw-medium ${labelClassName}`}>
+    <div className={`${className}`}>
+      <label htmlFor={name} className={`text-label block mb-2 ${labelClassName}`}>
         {label}
         {required && <span className="text-danger ms-1">*</span>}
       </label>

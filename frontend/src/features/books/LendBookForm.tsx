@@ -239,7 +239,7 @@ export default function LendBook() {
 
                     <button 
                         type="submit" 
-                        className="btn-primary w-full"
+                        className="btn btn-primary w-100"
                         disabled={
                             lendingLoading || 
                             !bookId || 
@@ -248,7 +248,14 @@ export default function LendBook() {
                             (borrowerType === 'custom' && !borrowerName)
                         }
                     >
-                        {lendingLoading ? "Lending Book..." : "Lend Book"}
+                        {lendingLoading ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Lending Book...
+                            </>
+                        ) : (
+                            'Lend Book'
+                        )}
                     </button>
                 </form>
             </div>

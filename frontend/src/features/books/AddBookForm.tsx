@@ -67,102 +67,86 @@ export default function AddBookForm() {
     }
 
     return (
-        <div className="container mt-4">
-            <div className="row justify-content-center">
-                <div className="col-md-8">
-                    <div className="card shadow-soft">
-                        <div className="card-header bg-primary text-white">
-                            <h4 className="mb-0">Add New Book to Your Library</h4>
-                        </div>
-                        <div className="card-body">
-                            {/* ✅ Display error if any */}
-                            {addBookError && (
-                                <div className="alert alert-danger">
-                                    {addBookError}
-                                </div>
-                            )}
-
-                            <form onSubmit={form.handleSubmit(handleSubmit)}>
-                                <TextField
-                                    form={form}
-                                    name="title"
-                                    label="Book Title"
-                                    placeholder="Enter book title"
-                                    required
-                                />
-
-                                <TextField
-                                    form={form}
-                                    name="author"
-                                    label="Author"
-                                    placeholder="Enter author name"
-                                    required
-                                />
-
-                                <SelectField
-                                    form={form}
-                                    name="genre"
-                                    label="Genre"
-                                    options={[
-                                        { value: '', label: 'Select a genre' },
-                                        { value: 'Fiction', label: 'Fiction' },
-                                        { value: 'Non-Fiction', label: 'Non-Fiction' },
-                                        { value: 'Mystery', label: 'Mystery' },
-                                        { value: 'Romance', label: 'Romance' },
-                                        { value: 'Science Fiction', label: 'Science Fiction' },
-                                        { value: 'Fantasy', label: 'Fantasy' },
-                                        { value: 'Biography', label: 'Biography' },
-                                        { value: 'History', label: 'History' },
-                                        { value: 'Self-Help', label: 'Self-Help' },
-                                        { value: 'Business', label: 'Business' },
-                                        { value: 'Technology', label: 'Technology' },
-                                        { value: 'Other', label: 'Other' },
-                                    ]}
-                                />
-
-                                <TextField
-                                    form={form}
-                                    name="isbn"
-                                    label="ISBN"
-                                    placeholder="Enter ISBN (optional)"
-                                />
-
-                                <TextAreaField
-                                    form={form}
-                                    name="description"
-                                    label="Description"
-                                    placeholder="Enter book description (optional)"
-                                    rows={3}
-                                />
-
-                                <div className="d-flex gap-2">
-                                    <button
-                                        type="submit"
-                                        className="btn btn-primary"
-                                        disabled={addBookLoading || !form.formState.isValid}
-                                    >
-                                        {addBookLoading ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                Adding Book...
-                                            </>
-                                        ) : (
-                                            'Add Book to Library'
-                                        )}
-                                    </button>
-                                    
-                                    <button
-                                        type="button"
-                                        className="btn btn-secondary"
-                                        onClick={() => navigate('/dashboard')}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+        <div>
+            <h2 className="heading-2 mb-8 text-center text-gradient">
+                📚 Add New Book to Your Library
+            </h2>
+            <div className="card max-w-2xl mx-auto">
+                {/* ✅ Display error if any */}
+                {addBookError && (
+                    <div className="mb-6 p-4 bg-error-50 border border-error-200 rounded-lg text-error-600">
+                        {addBookError}
                     </div>
-                </div>
+                )}
+
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                    <TextField
+                        form={form}
+                        name="title"
+                        label="Book Title"
+                        placeholder="Enter book title"
+                        required
+                    />
+
+                    <TextField
+                        form={form}
+                        name="author"
+                        label="Author"
+                        placeholder="Enter author name"
+                        required
+                    />
+
+                    <SelectField
+                        form={form}
+                        name="genre"
+                        label="Genre"
+                        options={[
+                            { value: '', label: 'Select a genre' },
+                            { value: 'Fiction', label: 'Fiction' },
+                            { value: 'Non-Fiction', label: 'Non-Fiction' },
+                            { value: 'Mystery', label: 'Mystery' },
+                            { value: 'Romance', label: 'Romance' },
+                            { value: 'Science Fiction', label: 'Science Fiction' },
+                            { value: 'Fantasy', label: 'Fantasy' },
+                            { value: 'Biography', label: 'Biography' },
+                            { value: 'History', label: 'History' },
+                            { value: 'Self-Help', label: 'Self-Help' },
+                            { value: 'Business', label: 'Business' },
+                            { value: 'Technology', label: 'Technology' },
+                            { value: 'Other', label: 'Other' },
+                        ]}
+                    />
+
+                    <TextField
+                        form={form}
+                        name="isbn"
+                        label="ISBN"
+                        placeholder="Enter ISBN (optional)"
+                    />
+
+                    <TextAreaField
+                        form={form}
+                        name="description"
+                        label="Description"
+                        placeholder="Enter book description (optional)"
+                        rows={3}
+                    />
+
+                    <button 
+                        type="submit" 
+                        className="btn btn-primary w-100"
+                        disabled={addBookLoading || !form.formState.isValid}
+                    >
+                        {addBookLoading ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Adding Book...
+                            </>
+                        ) : (
+                            'Add Book to Library'
+                        )}
+                    </button>
+                </form>
             </div>
         </div>
     );

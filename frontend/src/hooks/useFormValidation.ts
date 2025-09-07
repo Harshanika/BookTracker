@@ -46,7 +46,7 @@ export function getFieldClasses<T extends FieldValues>(
   const hasError = hasFieldError(form, fieldName);
   const isDirty = form.formState.dirtyFields[fieldName as keyof typeof form.formState.dirtyFields];
   
-  let classes = 'form-control';
+  let classes = 'input-field';
   
   // Add any additional base classes
   if (baseClasses) {
@@ -54,9 +54,9 @@ export function getFieldClasses<T extends FieldValues>(
   }
   
   if (hasError) {
-    classes += ' is-invalid';
+    classes += ' border-error-500';
   } else if (isDirty) {
-    classes += ' is-valid';
+    classes += ' border-success-500';
   }
   
   return classes;
@@ -68,7 +68,7 @@ export function getFieldFeedbackClasses<T extends FieldValues>(
   fieldName: Path<T>
 ): string {
   const hasError = hasFieldError(form, fieldName);
-  return hasError ? 'invalid-feedback' : 'valid-feedback';
+  return hasError ? 'text-sm text-error-600 mt-1' : 'text-sm text-success-600 mt-1';
 }
 
 // Helper function to format form errors for display
