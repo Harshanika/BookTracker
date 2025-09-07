@@ -107,6 +107,13 @@ export default function LentBooks() {
         return ` (${diffDays} days late)`;
     };
 
+    const calculateDaysOverdue = (expectedReturnDate: string) => {
+        const expectedDate = new Date(expectedReturnDate);
+        const today = new Date();
+        const diffTime = today.getTime() - expectedDate.getTime();
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -115,8 +122,16 @@ export default function LentBooks() {
         });
     };
 
-    const isOverdue = (expectedReturnDate: string | undefined, status: string | undefined) => {
-        if (status === 'returned' || !expectedReturnDate) return false;
+    const isOverdue = (expectedReturnDate: string | undefined, actualReturnDate: string | undefined, status: string | undefined) => {
+        // If book is already returned, it's not overdue
+        if (actualReturnDate || status === 'returned' || status === 'returned_early' || status === 'returned_on_time' || status === 'returned_late') {
+            return false;
+        }
+        
+        // If no expected return date, can't be overdue
+        if (!expectedReturnDate) return false;
+        
+        // Check if expected return date has passed and book is still lent
         return new Date(expectedReturnDate) < new Date();
     };
 
@@ -164,9 +179,10 @@ export default function LentBooks() {
                         const { book, lendingHistory, totalLendings, currentStatus } = bookGroup;
                         // Get the most recent record (last in the chronologically sorted array)
                         const latestRecord = lendingHistory[lendingHistory.length - 1];
-                        const isOverdueRecord = isOverdue(latestRecord?.expectedReturnDate, latestRecord?.status);
+                        const isOverdueRecord = isOverdue(latestRecord?.expectedReturnDate, latestRecord?.actualReturnDate, latestRecord?.status);
                         const finalStatus = isOverdueRecord ? 'overdue' : (currentStatus || 'available');
-                        const daysOverdue = isOverdueRecord ? Math.ceil((new Date().getTime() - new Date(latestRecord.expectedReturnDate).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+                        const daysOverdue = isOverdueRecord && latestRecord?.expectedReturnDate ? 
+                            calculateDaysOverdue(latestRecord.expectedReturnDate) : 0;
                         
                         return (
                             <div key={book.id} className={`list-group-item list-group-item-action ${finalStatus === 'overdue' ? 'border-danger' : ''}`}>
@@ -207,8 +223,13 @@ export default function LentBooks() {
                                                     <div className="mb-1">
                                                         <span className="me-3">Lent on: {formatDate(latestRecord.lendDate)}</span>
                                                         {latestRecord.expectedReturnDate && (
-                                                            <span className={`me-3 ${isOverdueRecord ? 'text-danger' : ''}`}>
+                                                            <span className={`me-3 ${isOverdueRecord ? 'text-danger fw-bold' : ''}`}>
                                                                 Expected return: {formatDate(latestRecord.expectedReturnDate)}
+                                                                {isOverdueRecord && (
+                                                                    <span className="text-danger ms-1">
+                                                                        (Overdue by {daysOverdue} day{daysOverdue !== 1 ? 's' : ''})
+                                                                    </span>
+                                                                )}
                                                             </span>
                                                         )}
                                                     </div>
