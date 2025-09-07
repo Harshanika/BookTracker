@@ -110,8 +110,8 @@ export default function LentBooks() {
     const calculateDaysOverdue = (expectedReturnDate: string) => {
         const expectedDate = new Date(expectedReturnDate);
         const today = new Date();
-        const diffTime = today.getTime() - expectedDate.getTime();
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = Math.ceil((today.getTime() - expectedDate.getTime()) / (1000 * 60 * 60 * 24));
+        return diffDays;
     };
 
     const formatDate = (dateString: string) => {
@@ -122,18 +122,6 @@ export default function LentBooks() {
         });
     };
 
-    const isOverdue = (expectedReturnDate: string | undefined, actualReturnDate: string | undefined, status: string | undefined) => {
-        // If book is already returned, it's not overdue
-        if (actualReturnDate || status === 'returned' || status === 'returned_early' || status === 'returned_on_time' || status === 'returned_late') {
-            return false;
-        }
-        
-        // If no expected return date, can't be overdue
-        if (!expectedReturnDate) return false;
-        
-        // Check if expected return date has passed and book is still lent
-        return new Date(expectedReturnDate) < new Date();
-    };
 
     if (loading) {
         return (
@@ -169,7 +157,7 @@ export default function LentBooks() {
                     </div>
                 </div>
             ) : (
-                <div className="list-group">
+            <div className="list-group">
                     {lendingRecords.map((bookGroup: any) => {
                         // Safety check for book group properties
                         if (!bookGroup || !bookGroup.book) {
@@ -179,9 +167,10 @@ export default function LentBooks() {
                         const { book, lendingHistory, totalLendings, currentStatus } = bookGroup;
                         // Get the most recent record (last in the chronologically sorted array)
                         const latestRecord = lendingHistory[lendingHistory.length - 1];
-                        const isOverdueRecord = isOverdue(latestRecord?.expectedReturnDate, latestRecord?.actualReturnDate, latestRecord?.status);
-                        const finalStatus = isOverdueRecord ? 'overdue' : (currentStatus || 'available');
-                        const daysOverdue = isOverdueRecord && latestRecord?.expectedReturnDate ? 
+                        // Use backend status directly - it already handles overdue logic
+                        const finalStatus = currentStatus || 'available';
+                        // Calculate days overdue only for display purposes
+                        const daysOverdue = (finalStatus === 'overdue' || finalStatus === 'lent') && latestRecord?.expectedReturnDate ? 
                             calculateDaysOverdue(latestRecord.expectedReturnDate) : 0;
                         
                         return (
@@ -200,7 +189,7 @@ export default function LentBooks() {
                                                 <span className={`badge ${getStatusColor(finalStatus)}`}>
                                                     {getStatusText(finalStatus)}
                                                 </span>
-                                                {isOverdueRecord && (
+                                                {finalStatus === 'overdue' && (
                                                     <span className={`badge ${getOverdueSeverity(daysOverdue)} ms-2`}>
                                                         {daysOverdue} days overdue
                                                     </span>
@@ -209,7 +198,7 @@ export default function LentBooks() {
                                                     {totalLendings} lending{totalLendings !== 1 ? 's' : ''}
                                                 </span>
                                             </div>
-                                            <p className="mb-1 text-muted">{book.author}</p>
+                            <p className="mb-1 text-muted">{book.author}</p>
                                             {book.genre && (
                                                 <p className="mb-1 text-muted small">Genre: {book.genre}</p>
                                             )}
@@ -223,9 +212,9 @@ export default function LentBooks() {
                                                     <div className="mb-1">
                                                         <span className="me-3">Lent on: {formatDate(latestRecord.lendDate)}</span>
                                                         {latestRecord.expectedReturnDate && (
-                                                            <span className={`me-3 ${isOverdueRecord ? 'text-danger fw-bold' : ''}`}>
+                                                            <span className={`me-3 ${finalStatus === 'overdue' ? 'text-danger fw-bold' : ''}`}>
                                                                 Expected return: {formatDate(latestRecord.expectedReturnDate)}
-                                                                {isOverdueRecord && (
+                                                                {finalStatus === 'overdue' && (
                                                                     <span className="text-danger ms-1">
                                                                         (Overdue by {daysOverdue} day{daysOverdue !== 1 ? 's' : ''})
                                                                     </span>
@@ -273,12 +262,12 @@ export default function LentBooks() {
                                                                     <div className="mt-1">
                                                                         <small className="text-muted">
                                                                             <strong>Note:</strong> {record.returnNote}
-                                                                        </small>
-                                                                    </div>
+                            </small>
+                    </div>
                                                                 )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
+            </div>
+                ))}
+            </div>
                                                 </div>
                                             )}
                                         </div>

@@ -129,15 +129,13 @@ export class LendingService {
         new Date(a.lendDate).getTime() - new Date(b.lendDate).getTime()
       );
       
-      // Find the most recent lending record to determine current status
-      const mostRecentRecord = group.lendingHistory.reduce((latest: any, current: any) => {
-        return new Date(current.lendDate) > new Date(latest.lendDate) ? current : latest;
-      });
+      // Get the most recent record (last element in sorted array)
+      const mostRecentRecord = sortedHistory[sortedHistory.length - 1];
       
       return {
         book: group.book,
         lendingHistory: sortedHistory,
-        totalLendings: group.lendingHistory.length,
+        totalLendings: sortedHistory.length,
         currentStatus: mostRecentRecord?.status || 'available'
       };
     });
