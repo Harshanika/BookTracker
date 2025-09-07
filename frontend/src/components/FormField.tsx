@@ -58,7 +58,6 @@ export function FormField<T extends FieldValues>({
       case 'select':
         return (
           <select {...commonProps} id={name}>
-            <option value="">Select {label}</option>
             {options.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}

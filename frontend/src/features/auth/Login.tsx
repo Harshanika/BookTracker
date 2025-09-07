@@ -74,7 +74,7 @@ export default function Login() {
                         </div>
                     )}
 
-                    <form onSubmit={form.handleSubmit(handleSubmit)}>
+                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                         <EmailField
                             form={form}
                             name="email"

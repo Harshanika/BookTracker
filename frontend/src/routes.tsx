@@ -14,6 +14,7 @@ import MainLayout from "./components/MainLayout";
 import ErrorBoundary from "components/ErrorBoundry";
 import ValidationTest from "./debug/ValidationTest";
 import SimpleValidationTest from "./debug/SimpleValidationTest";
+import LoaderTest from "./debug/LoaderTest";
 
 export default function AppRoutes() {
     return (
@@ -24,6 +25,7 @@ export default function AppRoutes() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/validation-test" element={<ValidationTest />} />
                 <Route path="/simple-validation-test" element={<SimpleValidationTest />} />
+                <Route path="/loader-test" element={<LoaderTest />} />
 
                 {/* Protected routes with MainLayout */}
                 <Route
