@@ -84,6 +84,9 @@ export default function LendBook() {
             setLendDate(new Date().toISOString().split('T')[0]);
             setExpectedReturnDate("");
             
+            // Refresh the available books list to remove the lent book
+            dispatch(fetchUserAvailableBooks());
+            
             // Navigate to lending history after 2 seconds
             setTimeout(() => {
                 // navigate("/lent-book-history");
