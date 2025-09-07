@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { store } from './store';  // ← Import from here
 import './styles/index.css';
+import './styles/form-consistency.css';
 import App from './App';
 
 const root = ReactDOM.createRoot(

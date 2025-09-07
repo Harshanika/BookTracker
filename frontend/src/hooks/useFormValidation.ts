@@ -41,20 +41,25 @@ export function hasFieldError<T extends FieldValues>(
 export function getFieldClasses<T extends FieldValues>(
   form: UseFormReturn<T>,
   fieldName: Path<T>,
-  baseClasses: string = 'form-control'
+  baseClasses: string = ''
 ): string {
   const hasError = hasFieldError(form, fieldName);
   const isDirty = form.formState.dirtyFields[fieldName as keyof typeof form.formState.dirtyFields];
   
+  let classes = 'form-control';
+  
+  // Add any additional base classes
+  if (baseClasses) {
+    classes += ` ${baseClasses}`;
+  }
+  
   if (hasError) {
-    return `${baseClasses} is-invalid`;
+    classes += ' is-invalid';
+  } else if (isDirty) {
+    classes += ' is-valid';
   }
   
-  if (isDirty) {
-    return `${baseClasses} is-valid`;
-  }
-  
-  return baseClasses;
+  return classes;
 }
 
 // Helper function to get field feedback classes

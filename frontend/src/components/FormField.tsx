@@ -98,11 +98,13 @@ export function FormField<T extends FieldValues>({
 
   return (
     <div className={`mb-3 ${className}`}>
-      <label htmlFor={name} className={`form-label ${labelClassName}`}>
+      <label htmlFor={name} className={`form-label fw-medium ${labelClassName}`}>
         {label}
         {required && <span className="text-danger ms-1">*</span>}
       </label>
-      {renderInput()}
+      <div className="position-relative">
+        {renderInput()}
+      </div>
       {error && (
         <div id={`${name}-error`} className={feedbackClasses}>
           {error}
