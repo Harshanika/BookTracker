@@ -21,11 +21,11 @@ export class LendingController {
     );
   }
 
-  // @UseGuards(AuthGuard)
-  // @Get('history')
-  // async getLendingHistory() {
-  //   return this.lendingService.getUserLendingHistory();
-  // }
+  @UseGuards(AuthGuard)
+  @Get('history')
+  async getLendingHistory() {
+    return this.lendingService.getUserLendingHistory();
+  }
 
   @UseGuards(AuthGuard)
   @Patch(':id/return')

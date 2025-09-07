@@ -1,41 +1,74 @@
 import React, { useEffect, useState } from "react";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import { fetchLendingHistory, returnBook, clearError } from "../../store/slices/lendingSlice";
+import BookCard from "../../components/BookCard";
+import ReturnBookModal from "../../components/ReturnBookModal";
 
 export default function LentBooks() {
     const dispatch = useAppDispatch();
     const { lendingRecords, loading, error } = useAppSelector(state => state.lending);
     const [returningId, setReturningId] = useState<number | null>(null);
+    const [successMessage, setSuccessMessage] = useState("");
+    const [showReturnModal, setShowReturnModal] = useState(false);
+    const [selectedRecord, setSelectedRecord] = useState<any>(null);
 
     useEffect(() => {
-        // dispatch(fetchLendingHistory());
+        dispatch(fetchLendingHistory());
         dispatch(clearError());
     }, [dispatch]);
 
-    const handleReturnBook = async (lendingId: number) => {
-        setReturningId(lendingId);
+    const handleReturnClick = (record: any) => {
+        setSelectedRecord(record);
+        setShowReturnModal(true);
+    };
+
+    const handleReturnConfirm = async (actualReturnDate: string, returnNote: string) => {
+        if (!selectedRecord) return;
+        
         try {
-            await dispatch(returnBook(lendingId.toString())).unwrap();
-            // Refresh the lending history after returning
-            // dispatch(fetchLendingHistory());
-        } catch (error) {
-            console.error("Failed to return book:", error);
+            setReturningId(selectedRecord.id);
+            await dispatch(returnBook({
+                lendingId: selectedRecord.id.toString(),
+                actualReturnDate,
+                returnNote
+            })).unwrap();
+            setSuccessMessage("Book returned successfully!");
+            // Refresh the lending history after successful return
+            dispatch(fetchLendingHistory());
+            // Clear success message after 3 seconds
+            setTimeout(() => setSuccessMessage(""), 3000);
+            // Close modal
+            setShowReturnModal(false);
+            setSelectedRecord(null);
+        } catch (err: any) {
+            console.error("Failed to mark book as returned:", err);
         } finally {
             setReturningId(null);
         }
     };
 
-    const getStatusColor = (status: string) => {
+    const handleReturnCancel = () => {
+        setShowReturnModal(false);
+        setSelectedRecord(null);
+    };
+
+    const getStatusColor = (status: string | undefined) => {
         switch (status) {
             case 'lent':
-                return 'bg-blue-100 text-blue-800';
+                return 'bg-info text-white';
             case 'returned':
-                return 'bg-green-100 text-green-800';
+                return 'bg-success text-white';
             case 'overdue':
-                return 'bg-red-100 text-red-800';
+                return 'bg-danger text-white';
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-secondary text-white';
         }
+    };
+
+    const getOverdueSeverity = (daysOverdue: number) => {
+        if (daysOverdue <= 7) return 'bg-warning text-dark';
+        if (daysOverdue <= 30) return 'bg-danger text-white';
+        return 'bg-dark text-white';
     };
 
     const formatDate = (dateString: string) => {
@@ -46,7 +79,7 @@ export default function LentBooks() {
         });
     };
 
-    const isOverdue = (expectedReturnDate: string | undefined, status: string) => {
+    const isOverdue = (expectedReturnDate: string | undefined, status: string | undefined) => {
         if (status === 'returned' || !expectedReturnDate) return false;
         return new Date(expectedReturnDate) < new Date();
     };
@@ -63,96 +96,103 @@ export default function LentBooks() {
     }
 
     return (
-        <div>
-            <h2 className="heading-2 mb-8 text-center text-gradient">
-                📚 Lending History
-            </h2>
+        <div className="container mt-5">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="text-primary mb-0">📚 Lending History ({lendingRecords.length})</h2>
+                <button className="btn btn-primary" onClick={() => window.location.href = '/lend-book'}>
+                    + Lend New Book
+                </button>
+            </div>
 
-            {error && (
-                <div className="mb-6 p-4 bg-error-50 border border-error-200 rounded-lg text-error-600">
-                    {error}
-                </div>
-            )}
+            {error && <div className="alert alert-danger mb-4">{error}</div>}
+            {successMessage && <div className="alert alert-success mb-4">{successMessage}</div>}
 
             {lendingRecords.length === 0 ? (
-                <div className="card max-w-2xl mx-auto text-center py-12">
-                    <div className="text-6xl mb-4">📖</div>
-                    <h3 className="heading-3 mb-2 text-gray-700">No Books Lent Yet</h3>
-                    <p className="text-gray-600 mb-6">
-                        You haven't lent any books yet. Start by lending a book to someone!
-                    </p>
-                    <a href="/lend-book" className="btn-primary">
-                        Lend a Book
-                    </a>
+                <div className="text-center py-5">
+                    <div className="text-muted">
+                        <h4>📖 No Books Lent Yet</h4>
+                        <p>You haven't lent any books yet. Start by lending a book to someone!</p>
+                        <a href="/lend-book" className="btn btn-primary">
+                            Lend a Book
+                        </a>
+                    </div>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="list-group">
                     {lendingRecords.map((record) => {
+                        // Safety check for record properties
+                        if (!record || !record.book) {
+                            return null;
+                        }
+                        
                         const isOverdueRecord = isOverdue(record.expectedReturnDate, record.status);
-                        const currentStatus = isOverdueRecord ? 'overdue' : record.status;
+                        const currentStatus = isOverdueRecord ? 'overdue' : (record.status || 'lent');
+                        const daysOverdue = isOverdueRecord ? Math.ceil((new Date().getTime() - new Date(record.expectedReturnDate!).getTime()) / (1000 * 60 * 60 * 24)) : 0;
                         
                         return (
-                            <div key={record.id} className="card">
-                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                    <div className="flex-1">
-                                        <div className="flex items-start justify-between mb-2">
-                                            <h3 className="heading-4 text-gray-900">
-                                                {record.book.title}
-                                            </h3>
-                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(currentStatus)}`}>
-                                                {currentStatus.toUpperCase()}
-                                            </span>
-                                        </div>
-                                        
-                                        <p className="text-gray-600 mb-2">
-                                            by <span className="font-medium">{record.book.author}</span>
+                            <div key={record.id} className={`list-group-item list-group-item-action ${currentStatus === 'overdue' ? 'border-danger' : ''}`}>
+                                <div className="d-flex align-items-center justify-content-between">
+                                    <div className="d-flex align-items-center">
+                                        <BookCard 
+                                            title={record.book.title} 
+                                            author={record.book.author} 
+                                            width={60}
+                                            height={80}
+                                        />
+                                        <div className="ms-3">
+                                            <div className="d-flex align-items-center mb-1">
+                                                <h5 className="mb-0 me-2">{record.book.title}</h5>
+                                                <span className={`badge ${getStatusColor(currentStatus)}`}>
+                                                    {currentStatus?.toUpperCase() || 'UNKNOWN'}
+                                                </span>
+                                                {isOverdueRecord && (
+                                                    <span className={`badge ${getOverdueSeverity(daysOverdue)} ms-2`}>
+                                                        {daysOverdue} days overdue
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="mb-1 text-muted">{record.book.author}</p>
                                             {record.book.genre && (
-                                                <span className="ml-2 text-sm text-gray-500">
-                                                    • {record.book.genre}
-                                                </span>
+                                                <p className="mb-1 text-muted small">Genre: {record.book.genre}</p>
                                             )}
-                                        </p>
-                                        
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                            <div>
-                                                <span className="text-gray-500">Borrower:</span>
-                                                <span className="ml-2 font-medium">
-                                                    {record.borrowerName || 'Unknown'}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <span className="text-gray-500">Lent on:</span>
-                                                <span className="ml-2 font-medium">
-                                                    {formatDate(record.lendDate)}
-                                                </span>
-                                            </div>
-                                            {record.expectedReturnDate && (
-                                                <div>
-                                                    <span className="text-gray-500">Expected return:</span>
-                                                    <span className={`ml-2 font-medium ${isOverdueRecord ? 'text-red-600' : ''}`}>
-                                                        {formatDate(record.expectedReturnDate)}
-                                                    </span>
+                                            <div className="small text-muted">
+                                                <div className="mb-1">
+                                                    <span className="me-3">Borrowed by: <strong className="text-primary">{record.borrowerName || 'Unknown'}</strong></span>
                                                 </div>
-                                            )}
-                                            {record.actualReturnDate && (
-                                                <div>
-                                                    <span className="text-gray-500">Returned on:</span>
-                                                    <span className="ml-2 font-medium text-green-600">
-                                                        {formatDate(record.actualReturnDate)}
-                                                    </span>
+                                                <div className="mb-1">
+                                                    <span className="me-3">Lent on: {formatDate(record.lendDate)}</span>
+                                                    {record.expectedReturnDate && (
+                                                        <span className={`me-3 ${isOverdueRecord ? 'text-danger' : ''}`}>
+                                                            Expected return: {formatDate(record.expectedReturnDate)}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                            )}
+                                                {record.actualReturnDate && (
+                                                    <div className="mb-1">
+                                                        <span className="me-3 text-success">
+                                                            <strong>Returned on: {formatDate(record.actualReturnDate)}</strong>
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {record.returnNote && (
+                                                    <div className="mt-2">
+                                                        <small className="text-muted">
+                                                            <strong>Return Note:</strong> {record.returnNote}
+                                                        </small>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                     
-                                    {record.status === 'lent' && (
-                                        <div className="flex flex-col sm:flex-row gap-2">
-                                            <button
-                                                onClick={() => handleReturnBook(record.id)}
+                                    {(record.status === 'lent' || !record.status) && (
+                                        <div className="d-flex gap-2">
+                                            <button 
+                                                className="btn btn-success btn-sm"
+                                                onClick={() => handleReturnClick(record)}
                                                 disabled={returningId === record.id}
-                                                className="btn-outline text-sm"
                                             >
-                                                {returningId === record.id ? 'Returning...' : 'Mark as Returned'}
+                                                {returningId === record.id ? "Returning..." : "Mark as Returned"}
                                             </button>
                                         </div>
                                     )}
@@ -162,6 +202,16 @@ export default function LentBooks() {
                     })}
                 </div>
             )}
+
+            {/* Return Book Modal */}
+            <ReturnBookModal
+                isOpen={showReturnModal}
+                onClose={handleReturnCancel}
+                onConfirm={handleReturnConfirm}
+                bookTitle={selectedRecord?.book?.title || ''}
+                borrowerName={selectedRecord?.borrowerName || ''}
+                loading={returningId !== null}
+            />
         </div>
     );
 }

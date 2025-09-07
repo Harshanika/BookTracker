@@ -14,6 +14,7 @@ interface LendingRecord {
   lendDate: string;
   expectedReturnDate?: string;
   actualReturnDate?: string;
+  returnNote?: string;
   status: 'lent' | 'returned' | 'overdue';
 }
 
@@ -35,7 +36,7 @@ export const fetchLendingHistory = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       // ✅ apiRequest automatically includes the token
-      const data = await apiRequest('/lending/history');
+      const data = await apiRequest('/api/lending/history');
       return data;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Network error');
