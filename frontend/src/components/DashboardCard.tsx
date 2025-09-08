@@ -30,7 +30,6 @@ export default function DashboardCard({
                         alt={title}
                         className="mb-3"
                         style={{ height: "80px" }}
-                        title={url}
                     />
                     <h5 className="fw-bold">{title}</h5>
                     <p className="display-5 fw-bold">{count}</p>

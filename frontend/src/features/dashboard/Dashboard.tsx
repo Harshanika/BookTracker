@@ -96,7 +96,7 @@ export default function Dashboard() {
                             <DashboardCard
                                 title="Overdue Books"
                                 count={stats?.overdueBooks || 0}
-                                imageUrl="https://cdn-icons-png/flaticon.com/512/2910/2910768.png"
+                                imageUrl="https://cdn-icons-png.flaticon.com/512/1828/1828419.png"
                                 bgColor="linear-gradient(135deg, #ff758c, #ff7eb3)"
                                 onClick={() => navigate("/total-books-overdue")}
                                 url="/total-books-overdue"
